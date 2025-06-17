@@ -1,0 +1,23 @@
+export const projectReviewForm = {
+  leaveReviewTitle: "Leave a Review for {supplierName}",
+  defaultSupplierName: "the Supplier",
+  shareYourExperience: "Share your experience with this supplier.",
+  ratingCategories: {
+    professionalism: "Professionalism",
+    quality: "Quality of Work",
+    cleanliness: "Cleanliness",
+    timeliness: "Timeliness",
+    overall: "Overall Rating",
+  },
+  yourReviewLabel: "Your Comments",
+  reviewPlaceholder: "Describe your experience, what went well, and any areas for improvement...",
+  submitButton: "Submit Review",
+  cancelButton: "Cancel",
+  invalidReviewToast: "Incomplete Review",
+  invalidReviewDesc: "Please provide a rating for all categories and a comment.",
+  invalidReviewDescFull: "Please provide a rating for all categories (Professionalism, Quality, Cleanliness, Timeliness, Overall) and write a comment.",
+  reviewSubmittedToast: "Review Submitted!",
+  reviewSubmittedDesc: "Thank you for your feedback.",
+  errorSubmittingReviewToast: "Review Error",
+  errorSubmittingReviewDesc: "Could not submit your review. Please try again.",
+};

@@ -1,0 +1,18 @@
+export const suppliersPage = {
+  title: "Find a Professional",
+  searchLabel: "Search Suppliers",
+  searchPlaceholder: "Name, company, or skill",
+  categoryLabel: "Profession/Category",
+  allCategoriesPlaceholder: "All Categories",
+  locationLabel: "City/Region (Future)",
+  locationPlaceholder: "e.g., Tbilisi (coming soon)",
+  defaultBio: "Experienced professional ready to help.",
+  reviewsText: "reviews",
+  viewProfileButton: "View Profile",
+  requestDetailsButton: "Request Supplier Details from Support",
+  noMatchTitle: "No suppliers match your current filters.",
+  noMatchDesc: "Try adjusting your search criteria.",
+  toastRequestSentTitle: "Request Sent",
+  toastRequestSentDesc: "Your request for details about",
+  adminWillContact: "Admin will review and contact you if approved.",
+};

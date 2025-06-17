@@ -1,0 +1,15 @@
+export const projectInfoCard = {
+  locationLabel: "Location",
+  budgetLabel: "Budget",
+  postedDateLabel: "Posted",
+  postedByLabel: "Posted by",
+  statusLabel: "Status",
+  categoryLabel: "Category",
+  descriptionTitle: "Project Description",
+  photosTitle: "Project Photos",
+  noPhotos: "No photos provided for this project.",
+  awardedToLabel: "Awarded To",
+  viewSupplierProfile: "View Supplier Profile",
+  inProgressMessage: "This project is currently in progress.",
+  supplierContactMessage: "Supplier can contact you at: {phone}",
+};

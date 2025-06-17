@@ -1,0 +1,16 @@
+export const header = {
+  home: "Home",
+  projects: "Projects",
+  suppliers: "Suppliers",
+  contact: "Contact Us",
+  about: "About Us",
+  admin: "Admin",
+  login: "Login",
+  register: "Register",
+  logout: "Logout",
+  wallet: "Wallet",
+  dashboard: "Dashboard",
+  profile: "Profile",
+  messages: "Messages",
+  notifications: "Notifications",
+};
