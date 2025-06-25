@@ -61,7 +61,7 @@ const ProjectDetailPage = () => {
 
 
     } else {
-      toast({ title: t.common.error, description: t.projectDetailPage.notFound, variant: "destructive" });
+      // toast({ title: t.common.error, description: t.projectDetailPage.notFound, variant: "destructive" });
       navigate('/projects');
     }
     setIsLoading(false);
@@ -107,17 +107,15 @@ const ProjectDetailPage = () => {
 
   const handleDelete = async () => {
     try {
-      console.log('handleDelete called for project id:', project.id);
       const success = await deleteProject(project.id);
-      console.log('deleteProject returned:', success);
       if (success) {
-        // Pass state to indicate deletion success
-        navigate('/projects', { state: { projectDeleted: true } });
+        toast({ title: t.projectDetailPage.deleteSuccessToast || "Project Deleted", description: t.projectDetailPage.deleteSuccessDesc || "The project has been removed.", variant: "success" });
+        navigate('/projects', { state: { projectDeleted: true } }); // <-- pass state
+        return; // Exit after successful deletion
       } else {
         toast({ title: t.projectDetailPage.deleteErrorToast || "Delete Failed", description: t.projectDetailPage.deleteErrorDesc || "Failed to delete the project.", variant: "destructive" });
       }
     } catch (error) {
-      console.error('handleDelete error:', error);
       toast({ title: t.projectDetailPage.deleteErrorToast || "Delete Failed", description: t.projectDetailPage.deleteErrorDesc || "Failed to delete the project.", variant: "destructive" });
     }
   };
@@ -180,12 +178,16 @@ const ProjectDetailPage = () => {
   }
 
   if (!project) {
-    // Suppress "Project not found" toast if redirected after deletion
-    React.useEffect(() => {
+    // Only show toast if not redirected after deletion
+    useEffect(() => {
       if (!(window.history.state && window.history.state.usr && window.history.state.usr.projectDeleted)) {
         toast({ title: t.projectDetailPage.notFoundTitle || "Project Deleted or Not Found", description: t.projectDetailPage.notFoundDesc || "The project has been deleted or does not exist.", variant: "destructive" });
       }
     }, []);
+    // If redirected after deletion, don't render anything
+    if (window.history.state && window.history.state.usr && window.history.state.usr.projectDeleted) {
+      return null;
+    }
     return (
       <div className="flex flex-col min-h-screen dark:bg-slate-900">
         <Header />

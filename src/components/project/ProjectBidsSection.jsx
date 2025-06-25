@@ -207,7 +207,7 @@ const ProjectBidsSection = ({ project, user, users, onBidSubmit, onAcceptBid }) 
                       <CardContent>
                         <p className="text-gray-700 dark:text-gray-300">{bid.message}</p>
                       </CardContent>
-                      {projectOwner && project.status === 'open' && (
+                      {projectOwner && (
                         <CardFooter className="bg-gray-50 dark:bg-slate-700/50 p-3">
                           <div className="flex justify-end space-x-3 w-full">
                             <Button
@@ -218,19 +218,30 @@ const ProjectBidsSection = ({ project, user, users, onBidSubmit, onAcceptBid }) 
                             >
                               <MessageSquare size={16} className="mr-2" /> {bidsT.chatButton || 'Chat'}
                             </Button>
-                            <Button
-                              onClick={async () => {
-                                await onAcceptBid(bid.id);
-                              }}
-                              size="sm"
-                              className={`bg-green-500 hover:bg-green-600 text-white dark:bg-green-600 dark:hover:bg-green-700`}
-                              disabled={project.awardedBidId === bid.id || project.status === 'awarded'}
-                            >
-                              <Star size={16} className="mr-2" />
-                              {project.awardedBidId === bid.id && project.status === 'awarded'
-                                ? (bidsT.acceptedBidButton || 'Accepted')
-                                : (bidsT.acceptBidButton || 'Accept Bid')}
-                            </Button>
+                            {project.status === 'open' && (
+                              <Button
+                                onClick={async () => {
+                                  await onAcceptBid(bid.id);
+                                }}
+                                size="sm"
+                                className={`bg-green-500 hover:bg-green-600 text-white dark:bg-green-600 dark:hover:bg-green-700`}
+                                disabled={project.awardedBidId === bid.id || project.status === 'awarded'}
+                              >
+                                <Star size={16} className="mr-2" />
+                                {project.awardedBidId === bid.id && project.status === 'awarded'
+                                  ? (bidsT.acceptedBidButton || 'Accepted')
+                                  : (bidsT.acceptBidButton || 'Accept Bid')}
+                              </Button>
+                            )}
+                            {project.status === 'awarded' && project.awardedBidId === bid.id && (
+                              <Button
+                                size="sm"
+                                disabled
+                                className="bg-green-500 text-white dark:bg-green-600"
+                              >
+                                {bidsT.acceptedBidButton || 'Accepted'}
+                              </Button>
+                            )}
                           </div>
                         </CardFooter>
                       )}

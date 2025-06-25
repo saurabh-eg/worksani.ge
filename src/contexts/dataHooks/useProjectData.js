@@ -134,31 +134,30 @@ export const useProjectData = (
 
   const deleteProjectData = useCallback(async (projectId) => {
     try {
-      console.log('deleteProjectData called for projectId:', projectId);
       if (!currentUser) {
         toast({ title: "Error", description: "You must be logged in to delete a project.", variant: "destructive" });
-        console.error('deleteProjectData: user not logged in');
         return false;
       }
 
       // Fetch the project to verify ownership
       const { data: project, error: fetchError } = await supabase
         .from('projects')
-        .select('user_id')
+        .select('user_id, customer_id')
         .eq('id', projectId)
         .single();
 
       if (fetchError) {
         toast({ title: "Error", description: fetchError.message || "Failed to fetch project.", variant: "destructive" });
-        console.error('deleteProjectData: fetchError', fetchError);
         return false;
       }
 
-      if (project.user_id !== currentUser.id) {
+      // Fix: Check both user_id and customer_id for ownership
+      if (project.user_id !== currentUser.id && project.customer_id !== currentUser.id) {
         toast({ title: "Error", description: "You are not authorized to delete this project.", variant: "destructive" });
-        console.error('deleteProjectData: unauthorized user', currentUser.id, 'project owner', project.user_id);
         return false;
       }
+      // New: Delete associated bids
+      await supabase.from('bids').delete().eq('project_id', projectId);
 
       const { error } = await supabase
         .from('projects')
@@ -167,17 +166,15 @@ export const useProjectData = (
 
       if (error) {
         toast({ title: "Error", description: error.message || "Failed to delete project.", variant: "destructive" });
-        console.error('deleteProjectData: delete error', error);
         return false;
       }
 
+
       setProjects(prevProjects => prevProjects.filter(p => p.id !== projectId));
       toast({ title: "Project Deleted", description: "The project has been removed.", variant: "destructive" });
-      console.log('deleteProjectData: project deleted successfully');
       return true;
     } catch (err) {
       toast({ title: "Error", description: err.message || "Unexpected error deleting project.", variant: "destructive" });
-      console.error('deleteProjectData: unexpected error', err);
       return false;
     }
   }, [toast, currentUser]);

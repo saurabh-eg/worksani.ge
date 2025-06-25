@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useData } from '@/contexts/DataContext';
 import Header from '@/components/Header';
@@ -12,25 +12,28 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { motion } from 'framer-motion';
 import { Briefcase, Search, PlusCircle, Eye, Filter, ListFilter } from 'lucide-react';
 import { translations } from '@/lib/translations';
+import { useToast } from '@/components/ui/use-toast';
 
 const projectCategories = [
   "all", "plumbing", "painting", "electrical", "carpentry", "cleaning", "gardening", "moving", "repairs", "hvac", "flooring", "roofing", "other"
 ];
 
-  const ProjectsPage = () => {
+const ProjectsPage = () => {
     const { user, language } = useAuth();
     const { projects, getCustomerProjects, getSupplierProjects, getUserById } = useData();
     const navigate = useNavigate();
+    const location = useLocation();
+    const { toast } = useToast();
     const t = translations[language] || translations.en;
 
     // Show toast if redirected after project deletion
     React.useEffect(() => {
-      if (window.history.state && window.history.state.usr && window.history.state.usr.projectDeleted) {
+      if (location.state && location.state.projectDeleted) {
         toast({ title: "Project Deleted", description: "The project has been deleted successfully." });
         // Clear the state so toast doesn't show again on refresh
         window.history.replaceState({}, document.title);
       }
-    }, []);
+    }, [location.state, toast]);
 
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
