@@ -14,10 +14,27 @@ import { useToast } from '@/components/ui/use-toast';
 import { motion } from 'framer-motion';
 import { PlusCircle, Upload, X, ArrowLeft, DollarSign, MapPin, ListChecks, Loader2, AlertTriangle, Wallet } from 'lucide-react';
 import { translations } from '@/lib/translations';
+import { supabase } from '@/lib/supabaseClient';
 
 const projectCategories = [
   "plumbing", "painting", "electrical", "carpentry", "cleaning", "gardening", "moving", "repairs", "hvac", "flooring", "roofing", "other"
 ];
+
+async function uploadPhotoToSupabase(file, userId) {
+  const fileExt = file.name.split('.').pop();
+  const fileName = `${userId}_${Date.now()}_${Math.random().toString(36).substring(2, 8)}.${fileExt}`;
+  const filePath = `project_photos/${fileName}`;
+
+  let { error: uploadError } = await supabase.storage
+    .from('project-photos')
+    .upload(filePath, file);
+
+  if (uploadError) throw uploadError;
+
+  // Get public URL
+  const { data } = supabase.storage.from('project-photos').getPublicUrl(filePath);
+  return data.publicUrl;
+}
 
 const PostProjectPage = () => {
   const { user, language } = useAuth();
@@ -70,13 +87,19 @@ const PostProjectPage = () => {
       return;
     }
     if (parseFloat(budget) <= 0) {
-        toast({ title: t.invalidBudgetTitle || "Invalid Budget", description: t.invalidBudgetDesc || "Budget must be a positive amount.", variant: "destructive" });
-        return;
+      toast({ title: t.invalidBudgetTitle || "Invalid Budget", description: t.invalidBudgetDesc || "Budget must be a positive amount.", variant: "destructive" });
+      return;
     }
 
     setIsSubmitting(true);
     try {
-      const photoDataForStorage = photos.map(p => ({ name: p.file.name, url: p.preview }));
+      // Upload photos and get public URLs
+      let photoDataForStorage = [];
+      for (const p of photos) {
+        const url = await uploadPhotoToSupabase(p.file, user.id);
+        photoDataForStorage.push({ name: p.file.name, url });
+      }
+
       const projectData = { title, description, category, location, budget: parseFloat(budget), photos: photoDataForStorage };
       const newProject = await addProject(projectData);
       if (newProject) {
@@ -202,7 +225,7 @@ const PostProjectPage = () => {
                   <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                     {photos.map((photo, index) => (
                       <div key={index} className="relative group aspect-square">
-                        <img-replace src={photo.preview} alt={`Preview ${index + 1}`} className="w-full h-full object-cover rounded-md shadow-md" />
+                        <img src={photo.preview} alt={`Preview ${index + 1}`} className="w-full h-full object-cover rounded-md shadow-md" />
                         <Button
                           type="button"
                           variant="destructive"
