@@ -97,7 +97,7 @@ export const addBidAction = async (projectId, bidData, currentUser, siteSettings
   return { newBid: data };
 };
 
-export const acceptBidAction = (project, bidId, currentUser, toastFunc) => {
+export const acceptBidAction = async (project, bidId, currentUser, toastFunc) => {
   if (!currentUser || currentUser.role !== 'customer') {
     toastFunc({ title: "Error", description: "Only customers can accept bids.", variant: "destructive" });
     return Promise.reject(new Error("Only customers can accept bids."));
@@ -117,13 +117,37 @@ export const acceptBidAction = (project, bidId, currentUser, toastFunc) => {
     return Promise.reject(new Error("Bid not found."));
   }
 
+  // --- NEW: Update Supabase ---
+  const { data, error } = await supabase
+    .from('projects')
+    .update({
+      status: 'awarded',
+      awarded_supplier_id: bidToAccept.supplierId,
+      awarded_bid_id: bidId,
+      awarded_amount: bidToAccept.amount,
+    })
+    .eq('id', project.id)
+    .select()
+    .single();
+
+  if (error) {
+    toastFunc({ title: "Error", description: error.message, variant: "destructive" });
+    return Promise.reject(error);
+  }
+
+  // --- Return the updated project (snake_case and camelCase for frontend) ---
   const updatedProject = {
     ...project,
+    ...data,
     status: 'awarded',
-    awardedSupplierId: bidToAccept.supplierId,
-    awardedBidId: bidId,
-    awardedAmount: bidToAccept.amount,
+    awardedSupplierId: data.awarded_supplier_id,
+    awardedBidId: data.awarded_bid_id,
+    awardedAmount: data.awarded_amount,
+    awarded_supplier_id: data.awarded_supplier_id,
+    awarded_bid_id: data.awarded_bid_id,
+    awarded_amount: data.awarded_amount,
   };
+
   toastFunc({ title: "Bid Accepted!", description: `Project "${project.title}" is now Awarded and In Progress.`, variant: "default" });
   return Promise.resolve(updatedProject);
 };

@@ -57,6 +57,21 @@ export const useProjectData = (
             postedDate: project.created_at,
             customerId: project.user_id,  // map user_id to customerId for UI compatibility
             customerNumericId: project.customer_numeric_id,
+            awardedSupplierId: project.awarded_supplier_id,
+            awardedBidId: project.awarded_bid_id,
+            awardedAmount: project.awarded_amount,
+            // Map bids fields to camelCase and supplierId
+            bids: (project.bids || []).map(bid => ({
+              id: bid.id,
+              projectId: bid.project_id,
+              supplierId: bid.bidder_id, // <--- use bidder_id as supplierId
+              amount: bid.amount,
+              date: bid.created_at,
+              supplierName: bid.supplier_name,
+              supplierProfilePhoto: bid.supplier_profile_photo_url,
+              message: bid.message,
+              supplierNumericId: bid.supplier_numeric_id,
+            })),
           }));
           setProjects(mappedData);
           localStorage.setItem('projects_worksani', JSON.stringify(mappedData));
@@ -189,20 +204,20 @@ export const useProjectData = (
     if (newBid) {
         // Convert snake_case keys from DB to camelCase for frontend usage
         const formattedBid = {
-            id: newBid.id,
-            projectId: newBid.project_id,
-            bidderId: newBid.bidder_id,
-            amount: newBid.amount,
-            createdAt: newBid.created_at,
-            supplierName: newBid.supplier_name,
-            supplierProfilePhoto: newBid.supplier_profile_photo,
-            message: newBid.message,
-            supplierNumericId: newBid.supplier_numeric_id,
+          id: newBid.id,
+          projectId: newBid.project_id,
+          supplierId: newBid.bidder_id, // <--- use bidder_id as supplierId
+          amount: newBid.amount,
+          date: newBid.created_at,
+          supplierName: newBid.supplier_name,
+          supplierProfilePhoto: newBid.supplier_profile_photo_url,
+          message: newBid.message,
+          supplierNumericId: newBid.supplier_numeric_id,
         };
         setProjects(prevProjects =>
-        prevProjects.map(p =>
+          prevProjects.map(p =>
             p.id === projectId ? { ...p, bids: [...(p.bids || []), formattedBid] } : p
-        )
+          )
         );
         
         if (project.customerId && addNotificationFunc) {

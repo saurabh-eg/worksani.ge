@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -97,14 +96,14 @@ const ProjectDetailPage = () => {
 
   // Update project state after adding a new project
   useEffect(() => {
-    if (projects.length > 0 && project && !project.id) {
-      const updatedProject = projects.find(p => p.id === projectId);
+    if (projects.length > 0 && project && project.id) {
+      const updatedProject = projects.find(p => p.id === project.id);
       if (updatedProject) {
         setProject(updatedProject);
         setEditedProjectData({ ...updatedProject });
       }
     }
-  }, [projects, project, projectId]);
+  }, [projects]);
 
   const handleDelete = async () => {
     try {
@@ -143,8 +142,15 @@ const ProjectDetailPage = () => {
   const handleAcceptBid = async (bidId) => {
     try {
       await acceptBid(project.id, bidId);
+      // Find the updated project from the projects array
+      const updatedProject = projects.find(p => p.id === project.id);
+      if (updatedProject) {
+        setProject(updatedProject);
+        setEditedProjectData({ ...updatedProject });
+      }
       toast({ title: t.projectBidsSection.bidAcceptedToast, description: t.projectBidsSection.bidAcceptedProjectDesc });
-      fetchProject(); 
+      // Optionally, you can still call fetchProject() for backend sync, but this ensures instant UI update
+      // fetchProject();
     } catch (error) {
       toast({ title: t.projectBidsSection.acceptBidErrorToast, description: error.message, variant: "destructive" });
     }
