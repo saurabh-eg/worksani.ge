@@ -86,27 +86,9 @@ const MessagesPage = () => {
       return;
     }
 
-    // // Find the awarded/in-progress project between these users
-    // const chatProject = projects.find(
-    //   p =>
-    //     ((p.customerId === user.id && p.awardedSupplierId === selectedChatPartner.id) ||
-    //       (p.customerId === selectedChatPartner.id && p.awardedSupplierId === user.id)) &&
-    //     (p.status === 'awarded' || p.status === 'In Progress')
-    // );
-
-    // if (!chatProject) {
-    //   toast({
-    //     title: "Error",
-    //     description: "No awarded project found for this chat.",
-    //     variant: "destructive",
-    //   });
-    //   return;
-    // }
-
     sendMessage({
       receiverId: selectedChatPartner.id,
       text: newMessage,
-      // projectId: chatProject.id,
     });
     setNewMessage('');
   };

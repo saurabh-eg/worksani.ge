@@ -118,19 +118,67 @@ export const useProjectData = (
     return newProject;
   }, [currentUser, siteSettings, deductProjectFeeFunc, toast]);
 
-  const updateProject = useCallback((projectId, updatedProjectData) => {
-    let updatedProject = null;
-    setProjects(prevProjects =>
-      prevProjects.map(p => {
-        if (p.id === projectId) {
-          updatedProject = { ...p, ...updatedProjectData };
-          return updatedProject;
-        }
-        return p;
-      })
-    );
-    return updatedProject;
-  }, []);
+  const updateProject = useCallback(async (projectId, updatedProjectData) => {
+    try {
+      // Map camelCase keys to snake_case for Supabase update
+      const mappedData = {
+        ...updatedProjectData,
+        user_id: updatedProjectData.userId || updatedProjectData.user_id,
+        title: updatedProjectData.title,
+        description: updatedProjectData.description,
+        budget: updatedProjectData.budget,
+        created_at: undefined,
+        customer_id: updatedProjectData.customerId || updatedProjectData.user_id,
+        customer_numeric_id: updatedProjectData.customerNumericId,
+        category: updatedProjectData.category,
+        location: updatedProjectData.location,
+        photos: updatedProjectData.photos,
+        status: updatedProjectData.status,
+        payment_status: updatedProjectData.paymentStatus,
+        awarded_supplier_id: updatedProjectData.awardedSupplierId,
+        awarded_bid_id: updatedProjectData.awardedBidId,
+        awarded_amount: updatedProjectData.awardedAmount,
+        userId: undefined,
+        awardedSupplierId: undefined,
+        awardedBidId: undefined,
+        awardedAmount: undefined,
+        customerId: undefined,
+        customerNumericId: undefined,
+        paymentStatus: undefined,
+        bids: undefined,
+        postedDate: undefined,
+        id: undefined,
+      };
+
+      // Remove undefined keys
+      Object.keys(mappedData).forEach(key => mappedData[key] === undefined && delete mappedData[key]);
+
+      // Update project in Supabase
+      const { data, error } = await supabase
+        .from('projects')
+        .update(mappedData)
+        .eq('id', projectId)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error updating project in Supabase:', error);
+        toast({ title: "Error", description: error.message || "Failed to update project.", variant: "destructive" });
+        return null;
+      }
+
+      // Update local state with updated project data
+      setProjects(prevProjects =>
+        prevProjects.map(p => (p.id === projectId ? { ...p, ...data } : p))
+      );
+
+      return data;
+    } catch (err) {
+      console.error('Unexpected error updating project:', err);
+      toast({ title: "Error", description: err.message || "Unexpected error updating project.", variant: "destructive" });
+      return null;
+    }
+  }, [toast]);
 
   const deleteProjectData = useCallback(async (projectId) => {
     try {

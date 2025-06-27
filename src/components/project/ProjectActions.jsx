@@ -47,11 +47,11 @@ const ProjectActions = ({ project, user, onEdit, onDelete, onMarkComplete, onLea
           <CheckCircle size={16} className="mr-2" /> {t.projectDetailPage.markCompleteCustomerButton}
         </Button>
       )}
-      {awardedSupplier && project.status === 'awarded' && (
+      {/* {awardedSupplier && project.status === 'awarded' && (
          <Button onClick={onMarkComplete} className="bg-green-500 hover:bg-green-600 text-white flex-grow sm:flex-none">
             <CheckCircle size={16} className="mr-2" /> {t.projectDetailPage.markCompleteSupplierButton}
          </Button>
-      )}
+      )} */}
       {projectOwner && project.status === 'Completed' && !project.review && project.awardedSupplierId && (
         <Button onClick={onLeaveReview} className="bg-yellow-500 hover:bg-yellow-600 text-white flex-grow sm:flex-none">
           <StarIcon size={16} className="mr-2" /> {t.projectDetailPage.leaveReviewButton}
