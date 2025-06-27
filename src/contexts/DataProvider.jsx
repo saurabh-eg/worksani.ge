@@ -6,7 +6,6 @@ import { useProjectData } from './dataHooks/useProjectData';
 import { useMessageData } from './dataHooks/useMessageData';
 import { useNotificationData } from './dataHooks/useNotificationData';
 import { useSiteSettingsData } from './dataHooks/useSiteSettingsData';
-import { supabase } from '@/lib/supabaseClient';
 
 export const DataProvider = ({ children }) => {
   const { user: currentUser, updateUserContextProfile } = useAuth();
@@ -74,64 +73,6 @@ export const DataProvider = ({ children }) => {
       setLoadingData(false);
     }
   }, [usersLoading, projectsLoading, messagesLoading, siteSettingsLoading, notificationsLoading]);
-
-  // Real-time subscription for profiles
-  useEffect(() => {
-    // console.log('DataProvider: useEffect for realtime subscription started');
-    let isSubscribed = true;
-    const channelRef = { current: null };
-
-    const setupRealtimeSubscription = async () => {
-      try {
-        // console.log('DataProvider: setupRealtimeSubscription called');
-        if (channelRef.current) {
-          // console.log('DataProvider: already subscribed, skipping');
-          return;
-        }
-
-        channelRef.current = supabase
-          .channel('profiles')
-          .on('postgres_changes', {
-            event: 'UPDATE',
-            schema: 'public',
-            table: 'profiles',
-          }, (payload) => {
-            if (!isSubscribed) return;
-
-            // console.log('DataProvider: received realtime update payload', payload);
-            const updatedData = payload.new;
-            setUsersData(prevUsers =>
-              prevUsers.map(user =>
-                user.id === updatedData.id
-                  ? { ...user, ...updatedData }
-                  : user
-              )
-            );
-
-            if (currentUser?.id === updatedData.id) {
-              updateUserContextProfile({ ...currentUser, ...updatedData });
-            }
-          })
-          .subscribe();
-
-        // console.log('DataProvider: subscription created', channelRef.current);
-
-      } catch (error) {
-        // console.error('Error setting up real-time subscription:', error);
-      }
-    };
-
-    setupRealtimeSubscription();
-
-    return () => {
-      // console.log('DataProvider: cleaning up realtime subscription');
-      isSubscribed = false;
-      if (channelRef.current) {
-        supabase.removeChannel(channelRef.current);
-        channelRef.current = null;
-      }
-    };
-  }, [currentUser, updateUserContextProfile]);
 
   const handleDeleteUser = useCallback((userId) => {
     deleteUserData(userId, mapProjectsForDeletedUser);

@@ -11,16 +11,5 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: true
-  },
-  realtime: {
-    enabled: true,
-    params: {
-      eventsPerSecond: 10
-    },
-    timeout: 60000, // 60 seconds timeout
-    heartbeat: {
-      interval: 5000, // Send heartbeat every 5 seconds
-      maxRetries: 5
-    }
   }
 });
