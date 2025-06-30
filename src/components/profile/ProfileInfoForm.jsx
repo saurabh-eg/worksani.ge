@@ -75,11 +75,11 @@ const ProfileInfoForm = ({ profileData, handleInputChange, handleLanguageChange,
       {userRole === 'supplier' && (
       <>
           <motion.div variants={itemVariants}>
-              <Label htmlFor="companyName" className="font-semibold text-gray-700 flex items-center"><Briefcase size={16} className="mr-2 text-purple-500"/> {t.companyNameLabel}</Label>
+              <Label htmlFor="company_name" className="font-semibold text-gray-700 flex items-center"><Briefcase size={16} className="mr-2 text-purple-500"/> {t.company_nameLabel}</Label>
               {isEditing ? (
-                  <Input id="companyName" name="companyName" value={profileData.companyName} onChange={handleInputChange} className="mt-1"/>
+                  <Input id="company_name" name="company_name" value={profileData.company_name} onChange={handleInputChange} className="mt-1"/>
               ) : (
-                  <p className="mt-1 text-gray-800 p-2 bg-gray-50 rounded-md min-h-[40px]">{profileData.companyName || t.notSet}</p>
+                  <p className="mt-1 text-gray-800 p-2 bg-gray-50 rounded-md min-h-[40px]">{profileData.company_name || t.notSet}</p>
               )}
           </motion.div>
           <motion.div variants={itemVariants}>
