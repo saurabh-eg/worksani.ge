@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -12,25 +12,36 @@ import { translations } from '@/lib/translations';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { supabase } from '@/lib/supabaseClient';
 
 const AdminReviewsTab = ({ projects, users, onUpdateProject, onDeleteReview }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [editingReviewData, setEditingReviewData] = useState(null); 
+  const [localReviews, setLocalReviews] = useState([]);
+  const [updateInProgress, setUpdateInProgress] = useState(false); // NEW: flag for optimistic update
+  const updateTimeoutRef = useRef(null); // NEW: ref for timeout
   const { toast } = useToast();
   const { language } = useAuth();
   const t = translations[language].adminPage.reviewsTab || {};
   const commonT = translations[language].common || {};
 
-  const reviews = projects
-    .filter(p => p.review)
-    .map(p => ({
-      ...p.review,
-      projectTitle: p.title,
-      projectId: p.id, 
-      supplierName: users.find(u => u.id === p.awardedSupplierId)?.name || commonT.unknownUser || 'Unknown Supplier',
-      customerName: users.find(u => u.id === p.customerId)?.name || commonT.unknownUser || 'Unknown Customer',
-      status: p.review.status || 'pending' 
-    }));
+  React.useEffect(() => {
+    if (!updateInProgress) { // Only sync if not updating
+      const mappedReviews = projects
+        .filter(p => p.review)
+        .map(p => ({
+          ...p.review,
+          projectTitle: p.title,
+          projectId: p.id,
+          supplierName: users.find(u => u.id === p.awardedSupplierId)?.name || commonT.unknownUser || 'Unknown Supplier',
+          customerName: users.find(u => u.id === p.customerId)?.name || commonT.unknownUser || 'Unknown Customer',
+          status: p.review.status || 'pending'
+        }));
+      setLocalReviews(mappedReviews);
+    }
+  }, [projects, users, commonT, updateInProgress]);
+
+  const reviews = localReviews.length > 0 ? localReviews : [];
 
   const filteredReviews = reviews.filter(review =>
     (review.projectTitle?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
@@ -54,28 +65,63 @@ const AdminReviewsTab = ({ projects, users, onUpdateProject, onDeleteReview }) =
     });
   };
 
-  const handleReviewSave = () => {
+  const handleReviewSave = async () => {
     if (!editingReviewData) return;
-    
+
     const projectToUpdate = projects.find(p => p.id === editingReviewData.projectId);
     if (projectToUpdate) {
+      // Update review in the reviews table
+      const { error } = await supabase
+        .from('reviews')
+        .update({
+          comment: editingReviewData.comment,
+          rating_overall: editingReviewData.ratings.overall,
+          rating_professionalism: editingReviewData.ratings.professionalism,
+          rating_quality: editingReviewData.ratings.quality,
+          rating_cleanliness: editingReviewData.ratings.cleanliness,
+          rating_timeliness: editingReviewData.ratings.timeliness,
+          status: editingReviewData.status || projectToUpdate.review.status || 'pending',
+        })
+        .eq('id', editingReviewData.id);
+
+      if (error) {
+        toast({ title: "Error", description: error.message || "Failed to update review.", variant: "destructive" });
+        return;
+      }
+
+      // Update local state/UI
       const updatedReviewData = {
-        ...projectToUpdate.review, 
+        ...projectToUpdate.review,
         comment: editingReviewData.comment,
-        ratings: { ...editingReviewData.ratings }, 
+        ratings: { ...editingReviewData.ratings },
         date: new Date().toISOString(),
         status: editingReviewData.status || projectToUpdate.review.status || 'pending'
       };
 
       const updatedProject = {
         ...projectToUpdate,
-        review: updatedReviewData
+        review: updatedReviewData,
+        userId: projectToUpdate.user_id || projectToUpdate.userId,
+        customerId: projectToUpdate.customer_id || projectToUpdate.customerId,
+        customerNumericId: projectToUpdate.customer_numeric_id || projectToUpdate.customerNumericId,
+        awardedSupplierId: projectToUpdate.awarded_supplier_id || projectToUpdate.awardedSupplierId,
+        awardedBidId: projectToUpdate.awarded_bid_id || projectToUpdate.awardedBidId,
+        awardedAmount: projectToUpdate.awarded_amount || projectToUpdate.awardedAmount,
+        review_id: projectToUpdate.review_id || (projectToUpdate.review && projectToUpdate.review.id),
+        title: projectToUpdate.title,
+        description: projectToUpdate.description,
+        budget: projectToUpdate.budget,
+        category: projectToUpdate.category,
+        location: projectToUpdate.location,
+        photos: projectToUpdate.photos,
+        status: projectToUpdate.status,
+        paymentStatus: projectToUpdate.payment_status || projectToUpdate.paymentStatus,
       };
       onUpdateProject(projectToUpdate.id, updatedProject);
-      
+
       const supplierToUpdate = users.find(u => u.id === projectToUpdate.awardedSupplierId);
       if (supplierToUpdate) {
-        const updatedSupplierReviews = (supplierToUpdate.reviews || []).map(rev => 
+        const updatedSupplierReviews = (supplierToUpdate.reviews || []).map(rev =>
           rev.id === editingReviewData.id ? updatedReviewData : rev
         );
         onUpdateProject(supplierToUpdate.id, { ...supplierToUpdate, reviews: updatedSupplierReviews });
@@ -86,21 +132,37 @@ const AdminReviewsTab = ({ projects, users, onUpdateProject, onDeleteReview }) =
     }
   };
 
-  const handleReviewStatusChange = (projectId, reviewId, newStatus) => {
+  const handleReviewStatusChange = async (projectId, reviewId, newStatus) => {
     const projectToUpdate = projects.find(p => p.id === projectId);
     if (projectToUpdate && projectToUpdate.review && projectToUpdate.review.id === reviewId) {
+      setUpdateInProgress(true); // Set flag before update
+      // Update review status in the reviews table
+      const { error } = await supabase
+        .from('reviews')
+        .update({ status: newStatus })
+        .eq('id', reviewId);
+
+      if (error) {
+        toast({ title: "Error", description: error.message || "Failed to update review status.", variant: "destructive" });
+        setUpdateInProgress(false); // Reset flag on error
+        return;
+      }
+
+      // Update local state/UI immediately for instant UI update
+      setLocalReviews(prevReviews => prevReviews.map(r =>
+        r.id === reviewId ? { ...r, status: newStatus } : r
+      ));
+
+      // Update parent project state immediately and optimistically
       const updatedReviewData = { ...projectToUpdate.review, status: newStatus };
       const updatedProject = { ...projectToUpdate, review: updatedReviewData };
-      onUpdateProject(projectId, updatedProject);
+      onUpdateProject(projectId, updatedProject, true); // pass 'optimisticOnly' flag
 
-      const supplierToUpdate = users.find(u => u.id === projectToUpdate.awardedSupplierId);
-      if (supplierToUpdate) {
-        const updatedSupplierReviews = (supplierToUpdate.reviews || []).map(rev => 
-          rev.id === reviewId ? updatedReviewData : rev
-        );
-        onUpdateProject(supplierToUpdate.id, { ...supplierToUpdate, reviews: updatedSupplierReviews });
-      }
       toast({ title: t.reviewStatusUpdatedTitle || "Review Status Updated", description: `${t.reviewStatusUpdatedDesc || "Review status changed to"} ${newStatus}.` });
+
+      // Clear the update flag after a short delay to allow parent data to sync
+      if (updateTimeoutRef.current) clearTimeout(updateTimeoutRef.current);
+      updateTimeoutRef.current = setTimeout(() => setUpdateInProgress(false), 1500);
     }
   };
 

@@ -152,7 +152,7 @@ export const acceptBidAction = async (project, bidId, currentUser, toastFunc) =>
   return Promise.resolve(updatedProject);
 };
 
-export const addReviewAction = (reviewData, currentUser, project, toastFunc) => {
+export const addReviewAction = async (reviewData, currentUser, project, toastFunc) => {
   if (!currentUser || currentUser.role !== 'customer') {
     toastFunc({ title: "Error", description: "Only customers can leave reviews.", variant: "destructive" });
     return Promise.reject(new Error("Only customers can leave reviews."));
@@ -172,16 +172,46 @@ export const addReviewAction = (reviewData, currentUser, project, toastFunc) => 
 
   const newReview = {
     id: uuidv4(),
-    reviewerId: currentUser.id,
-    reviewerNumericId: currentUser.numericId,
-    reviewerName: currentUser.name,
-    projectId: project.id,
-    supplierId: project.awardedSupplierId,
-    ratings: reviewData.ratings,
+    project_id: project.id,
+    reviewer_id: currentUser.id,
+    reviewer_numeric_id: currentUser.numericId,
+    reviewer_name: currentUser.name,
+    supplier_id: project.awardedSupplierId,
+    rating_professionalism: reviewData.ratings.professionalism,
+    rating_quality: reviewData.ratings.quality,
+    rating_cleanliness: reviewData.ratings.cleanliness,
+    rating_timeliness: reviewData.ratings.timeliness,
+    rating_overall: reviewData.ratings.overall,
     comment: reviewData.comment,
-    date: new Date().toISOString(),
-    status: 'pending', 
+    status: 'pending',
+    created_at: new Date().toISOString(),
   };
+
+  // Insert the new review into the 'reviews' table
+  const { data: insertedReview, error: insertError } = await supabase
+    .from('reviews')
+    .insert([newReview])
+    .select()
+    .single();
+
+  if (insertError) {
+    toastFunc({ title: "Error", description: "Failed to submit review.", variant: "destructive" });
+    return Promise.reject(insertError);
+  }
+
+  // Update the project with the new review_id
+  const { data: updatedProject, error: updateError } = await supabase
+    .from('projects')
+    .update({ review_id: insertedReview.id })
+    .eq('id', project.id)
+    .select()
+    .single();
+
+  if (updateError) {
+    toastFunc({ title: "Error", description: "Failed to update project with review.", variant: "destructive" });
+    return Promise.reject(updateError);
+  }
+
   toastFunc({ title: "Review Submitted!", description: "Thank you for your feedback. It will be reviewed by an admin.", variant: "default" });
-  return Promise.resolve(newReview);
+  return Promise.resolve(updatedProject);
 };
