@@ -16,7 +16,7 @@ import { supabase } from '@/lib/supabaseClient';
 
 const AdminReviewsTab = ({ projects, users, onUpdateProject, onDeleteReview }) => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [editingReviewData, setEditingReviewData] = useState(null); 
+  const [editingReviewData, setEditingReviewData] = useState(null);
   const [localReviews, setLocalReviews] = useState([]);
   const [updateInProgress, setUpdateInProgress] = useState(false); // NEW: flag for optimistic update
   const updateTimeoutRef = useRef(null); // NEW: ref for timeout
@@ -33,8 +33,8 @@ const AdminReviewsTab = ({ projects, users, onUpdateProject, onDeleteReview }) =
           ...p.review,
           projectTitle: p.title,
           projectId: p.id,
-          supplierName: users.find(u => u.id === p.awardedSupplierId)?.name || commonT.unknownUser || 'Unknown Supplier',
-          customerName: users.find(u => u.id === p.customerId)?.name || commonT.unknownUser || 'Unknown Customer',
+          supplierName: users.find(u => u.id === p.review.supplierId)?.name || 'Unknown Supplier',
+          customerName: users.find(u => u.id === p.review.reviewerId)?.name || 'Unknown Customer',
           status: p.review.status || 'pending'
         }));
       setLocalReviews(mappedReviews);
@@ -53,7 +53,7 @@ const AdminReviewsTab = ({ projects, users, onUpdateProject, onDeleteReview }) =
 
   const handleReviewDelete = (projectId) => {
     if (window.confirm(t.confirmDeleteReview || "Are you sure you want to delete this review?")) {
-      onDeleteReview(projectId); 
+      onDeleteReview(projectId);
       toast({ title: t.reviewDeletedTitle || "Review Deleted", description: t.reviewDeletedDesc || "The review has been removed." });
     }
   };
@@ -61,7 +61,7 @@ const AdminReviewsTab = ({ projects, users, onUpdateProject, onDeleteReview }) =
   const handleReviewEdit = (review) => {
     setEditingReviewData({
       ...review,
-      projectId: review.projectId 
+      projectId: review.projectId
     });
   };
 
@@ -167,12 +167,12 @@ const AdminReviewsTab = ({ projects, users, onUpdateProject, onDeleteReview }) =
   };
 
   const getStatusBadge = (status) => {
-    switch(status) {
-      case 'approved': return <Badge className="bg-green-500 text-white"><CheckCircle size={12} className="mr-1"/> {t.statusApproved || "Approved"}</Badge>;
-      case 'declined': return <Badge className="bg-red-500 text-white"><XCircle size={12} className="mr-1"/> {t.statusDeclined || "Declined"}</Badge>;
+    switch (status) {
+      case 'approved': return <Badge className="bg-green-500 text-white"><CheckCircle size={12} className="mr-1" /> {t.statusApproved || "Approved"}</Badge>;
+      case 'declined': return <Badge className="bg-red-500 text-white"><XCircle size={12} className="mr-1" /> {t.statusDeclined || "Declined"}</Badge>;
       case 'pending':
       default:
-        return <Badge className="bg-yellow-500 text-black"><AlertCircle size={12} className="mr-1"/> {t.statusPending || "Pending"}</Badge>;
+        return <Badge className="bg-yellow-500 text-black"><AlertCircle size={12} className="mr-1" /> {t.statusPending || "Pending"}</Badge>;
     }
   };
 
@@ -185,7 +185,7 @@ const AdminReviewsTab = ({ projects, users, onUpdateProject, onDeleteReview }) =
     <motion.div variants={itemVariants} initial="hidden" animate="visible">
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center"><StarIcon className="mr-2 text-yellow-500"/> {t.title || "Manage Reviews"} ({filteredReviews.length})</CardTitle>
+          <CardTitle className="flex items-center"><StarIcon className="mr-2 text-yellow-500" /> {t.title || "Manage Reviews"} ({filteredReviews.length})</CardTitle>
           <CardDescription>{t.description || "View, edit, approve, or decline customer reviews."}</CardDescription>
           <div className="relative mt-4">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -215,70 +215,98 @@ const AdminReviewsTab = ({ projects, users, onUpdateProject, onDeleteReview }) =
               <TableBody>
                 {filteredReviews.map((review) => (
                   <TableRow key={review.id}>
-                    <TableCell className="font-medium flex items-center">
-                      <Briefcase size={16} className="mr-2 text-purple-500 opacity-70"/>
-                      {review.projectTitle}
+                    <TableCell className="font-medium">
+                      <div className="flex items-center">
+                        <Briefcase size={16} className="mr-2 text-purple-500 opacity-70" />
+                        {review.projectTitle}
+                      </div>
                     </TableCell>
-                    <TableCell className="flex items-center">
-                      <UserCircle size={16} className="mr-2 text-green-500 opacity-70"/>
-                      {review.supplierName}
-                    </TableCell>
-                    <TableCell className="flex items-center">
-                      <UserCircle size={16} className="mr-2 text-blue-500 opacity-70"/>
-                      {review.customerName}
-                    </TableCell>
+
                     <TableCell>
                       <div className="flex items-center">
-                        <span className="mr-1.5 text-sm font-semibold text-yellow-600">{review.ratings.overall.toFixed(1)}</span>
+                        <UserCircle size={16} className="mr-2 text-green-500 opacity-70" />
+                        {review.supplierName}
+                      </div>
+                    </TableCell>
+
+                    <TableCell>
+                      <div className="flex items-center">
+                        <UserCircle size={16} className="mr-2 text-blue-500 opacity-70" />
+                        {review.customerName}
+                      </div>
+                    </TableCell>
+
+                    <TableCell>
+                      <div className="flex items-center">
+                        <span className="mr-1.5 text-sm font-semibold text-yellow-600">
+                          {review.ratings.overall.toFixed(1)}
+                        </span>
                         <div className="flex">
                           {[1, 2, 3, 4, 5].map((star) => (
                             <StarIcon
                               key={star}
                               size={14}
-                              className={star <= review.ratings.overall ? "fill-yellow-400 text-yellow-400" : "text-gray-300"}
+                              className={
+                                star <= review.ratings.overall
+                                  ? "fill-yellow-400 text-yellow-400"
+                                  : "text-gray-300"
+                              }
                             />
                           ))}
                         </div>
                       </div>
                     </TableCell>
+
                     <TableCell>{getStatusBadge(review.status)}</TableCell>
+
                     <TableCell>{new Date(review.date).toLocaleDateString()}</TableCell>
+
                     <TableCell className="text-right space-x-1">
                       {review.status !== 'approved' && (
                         <Button variant="outline" size="sm" onClick={() => handleReviewStatusChange(review.projectId, review.id, 'approved')} className="text-green-600 border-green-600 hover:bg-green-50">
-                          <CheckCircle className="h-4 w-4"/>
+                          <CheckCircle className="h-4 w-4" />
                         </Button>
                       )}
                       {review.status !== 'declined' && (
                         <Button variant="outline" size="sm" onClick={() => handleReviewStatusChange(review.projectId, review.id, 'declined')} className="text-red-600 border-red-600 hover:bg-red-50">
-                          <XCircle className="h-4 w-4"/>
+                          <XCircle className="h-4 w-4" />
                         </Button>
                       )}
                       <Dialog open={editingReviewData?.id === review.id} onOpenChange={(isOpen) => !isOpen && setEditingReviewData(null)}>
                         <DialogTrigger asChild>
-                          <Button variant="outline" size="sm" onClick={() => handleReviewEdit(review)} className="text-blue-600 border-blue-600 hover:bg-blue-50">
-                            <Edit className="h-4 w-4"/>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleReviewEdit(review)}
+                            className="text-blue-600 border-blue-600 hover:bg-blue-50"
+                          >
+                            <Edit className="h-4 w-4" />
                           </Button>
                         </DialogTrigger>
-                        {editingReviewData && editingReviewData.id === review.id && (
+
+                        {editingReviewData?.id === review.id && (
                           <DialogContent className="sm:max-w-md">
                             <DialogHeader>
                               <DialogTitle>{t.editReviewTitle || "Edit Review"}</DialogTitle>
                               <DialogDescription>{t.editReviewDesc || "Modify the review details below."}</DialogDescription>
                             </DialogHeader>
+
                             <div className="grid gap-4 py-4">
                               <div className="space-y-1">
-                                <Label htmlFor="reviewCommentAdmin" className="text-sm">{t.commentLabel || "Comment"}</Label>
+                                <Label htmlFor="reviewCommentAdmin">{t.commentLabel || "Comment"}</Label>
                                 <Textarea
                                   id="reviewCommentAdmin"
                                   value={editingReviewData.comment}
-                                  onChange={(e) => setEditingReviewData({...editingReviewData, comment: e.target.value})}
+                                  onChange={(e) => setEditingReviewData({ ...editingReviewData, comment: e.target.value })}
                                   rows={3}
                                 />
                               </div>
-                              {Object.entries(editingReviewData.ratings).map(([key, value]) => (
+
+                              {Object.entries(editingReviewData.ratings || {}).map(([key, value]) => (
                                 <div key={key} className="grid grid-cols-3 items-center gap-2">
-                                  <Label htmlFor={`rating-${key}`} className="text-sm capitalize text-right">{translations[language].projectReviewForm.ratingCategories[key] || key}</Label>
+                                  <Label htmlFor={`rating-${key}`} className="text-sm capitalize text-right">
+                                    {translations[language].projectReviewForm.ratingCategories[key] || key}
+                                  </Label>
                                   <Input
                                     id={`rating-${key}`}
                                     type="number"
@@ -286,39 +314,47 @@ const AdminReviewsTab = ({ projects, users, onUpdateProject, onDeleteReview }) =
                                     max="5"
                                     step="0.5"
                                     value={value}
-                                    onChange={(e) => setEditingReviewData({
-                                      ...editingReviewData,
-                                      ratings: {
-                                        ...editingReviewData.ratings,
-                                        [key]: Number(e.target.value)
-                                      }
-                                    })}
+                                    onChange={(e) =>
+                                      setEditingReviewData({
+                                        ...editingReviewData,
+                                        ratings: {
+                                          ...editingReviewData.ratings,
+                                          [key]: Number(e.target.value),
+                                        },
+                                      })
+                                    }
                                     className="col-span-2 h-8"
                                   />
                                 </div>
                               ))}
                             </div>
+
                             <DialogFooter>
                               <DialogClose asChild>
-                                <Button variant="outline" onClick={() => setEditingReviewData(null)}>{commonT.cancel || "Cancel"}</Button>
+                                <Button variant="outline" onClick={() => setEditingReviewData(null)}>
+                                  {commonT.cancel || "Cancel"}
+                                </Button>
                               </DialogClose>
                               <Button onClick={handleReviewSave}>{commonT.save || "Save"}</Button>
                             </DialogFooter>
                           </DialogContent>
                         )}
                       </Dialog>
+
                       <Button variant="destructive" size="sm" onClick={() => handleReviewDelete(review.projectId)}>
-                        <Trash2 className="h-4 w-4"/>
+                        <Trash2 className="h-4 w-4" />
                       </Button>
                     </TableCell>
+
                   </TableRow>
+
                 ))}
               </TableBody>
             </Table>
           ) : (
-             <div className="text-center py-10 text-gray-500">
-                <StarIcon size={40} className="mx-auto mb-2 opacity-70" />
-                <p>{t.noReviewsFound || "No reviews found matching your criteria."}</p>
+            <div className="text-center py-10 text-gray-500">
+              <StarIcon size={40} className="mx-auto mb-2 opacity-70" />
+              <p>{t.noReviewsFound || "No reviews found matching your criteria."}</p>
             </div>
           )}
         </CardContent>

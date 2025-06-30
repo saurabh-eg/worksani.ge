@@ -222,8 +222,7 @@ export const useProjectData = (
         .from('projects')
         .update(mappedData)
         .eq('id', projectId)
-        .select()
-        .single();
+        .select();
 
       if (error) {
         toast({ title: "Error", description: error.message || "Failed to update project.", variant: "destructive" });
