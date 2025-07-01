@@ -107,6 +107,8 @@ export const useProjectData = (
                 reviewerName: project.review.reviewer_name,
                 reviewerNumericId: project.review.reviewer_numeric_id,
               } : null,
+              // Ensure photos is always an array
+              photos: Array.isArray(project.photos) ? project.photos : (project.photos ? JSON.parse(project.photos) : []),
             }));
             setProjects(mappedData);
             localStorage.setItem('projects_worksani', JSON.stringify(mappedData));

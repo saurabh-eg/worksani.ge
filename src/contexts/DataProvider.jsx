@@ -29,6 +29,14 @@ export const DataProvider = ({ children }) => {
     setUsersData,
   } = useUserData();
 
+  // Map member_since to memberSince for all users
+  const mappedUsersData = usersData
+    ? usersData.map(u => ({
+        ...u,
+        memberSince: u.memberSince || u.member_since || u.created_at || null,
+      }))
+    : [];
+
   const {
     projects,
     setProjects,
@@ -89,7 +97,7 @@ export const DataProvider = ({ children }) => {
   return (
     <DataContext.Provider value={{
       projects,
-      users: usersData,
+      users: mappedUsersData,
       messages,
       flaggedMessages,
       siteSettings,
