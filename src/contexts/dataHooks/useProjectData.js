@@ -261,8 +261,8 @@ export const useProjectData = (
         return false;
       }
 
-      // Fix: Check both user_id and customer_id for ownership
-      if (project.user_id !== currentUser.id && project.customer_id !== currentUser.id) {
+      // Fix: Check both user_id and customer_id for ownership, allow admin to delete any project
+      if (currentUser.role !== 'admin' && project.user_id !== currentUser.id && project.customer_id !== currentUser.id) {
         toast({ title: "Error", description: "You are not authorized to delete this project.", variant: "destructive" });
         return false;
       }
