@@ -29,7 +29,7 @@ const ProfilePage = () => {
   });
   const [currentBalance, setCurrentBalance] = useState(0);
   const [newPhotoFile, setNewPhotoFile] = useState(null);
-  const [newGalleryFiles, setNewGalleryFiles] = useState([]);
+  // const [newGalleryFiles, setNewGalleryFiles] = useState([]);
 
 
   useEffect(() => {
@@ -45,7 +45,12 @@ const ProfilePage = () => {
         phone: freshUserData.phone || '',
         languages: freshUserData.languages || [],
       });
-      setCurrentBalance(parseFloat(freshUserData.balance || 0));
+      // Fix: supplier account balance
+      setCurrentBalance(
+        typeof freshUserData.bid_balance !== "undefined"
+          ? parseFloat(freshUserData.bid_balance || 0)
+          : parseFloat(freshUserData.balance || 0)
+      );
     }
   }, [user, getUserById]);
 
@@ -67,7 +72,10 @@ const ProfilePage = () => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       const tempUrl = URL.createObjectURL(file);
-      setProfileData(prev => ({ ...prev, profile_photo: tempUrl }));
+      setProfileData(prev => ({
+        ...prev,
+        profile_photo_url: tempUrl // <-- update the preview field, not profile_photo
+      }));
       setNewPhotoFile(file);
     }
   };
@@ -146,12 +154,13 @@ const ProfilePage = () => {
       toast({ title: "Password Too Short", description: "New password must be at least 6 characters.", variant: "destructive" });
       return;
     }
-     // Require at least one special character
-  if (!/[!@#$%^&*(),.?":{}|<>]/.test(newPasswordInput)) {
-    toast({ title: "Weak Password", description: "Password must include at least one special character (e.g. @, #, $, %, &, *).", variant: "destructive" });
-    return;
-  }
-    if (newPasswordInput !== confirmNewPasswordInput) {
+    // Require at least one special character
+    if (!/[!@#$%^&*(),.?":{}|<>]/.test(newPasswordInput)) {
+      toast({ title: "Weak Password", description: "Password must include at least one special character (e.g. @, #, $, %, &, *).", variant: "destructive" });
+      return;
+    }
+    // Fix: compare values, not references
+    if (String(newPasswordInput) !== String(confirmNewPasswordInput)) {
       toast({ title: "Passwords Don't Match", description: "New password and confirmation do not match.", variant: "destructive" });
       return;
     }
@@ -218,6 +227,10 @@ const ProfilePage = () => {
                     <CardDescription className="text-purple-200 text-lg mt-1">
                       {translations[currentUILanguage].roles[user.role]}
                     </CardDescription>
+                    {/* Show user id */}
+                    <div className="mt-2 text-xs text-purple-100">
+                      <span className="font-semibold">User ID:</span> {user.numeric_id}
+                    </div>
                   </div>
                 </div>
                 {!isEditing && (
@@ -236,6 +249,7 @@ const ProfilePage = () => {
                     userRole={user.role}
                     currentUILanguage={currentUILanguage}
                   />
+                  {/* 
                   {user.role === 'supplier' && (
                     <ProfileGallery
                       gallery={profileData.past_projects_gallery}
@@ -245,6 +259,7 @@ const ProfilePage = () => {
                       currentUILanguage={currentUILanguage}
                     />
                   )}
+                  */}
                   {isEditing && (
                     <motion.div variants={itemVariants} className="flex justify-end space-x-3 pt-4 border-t">
                       <Button type="button" variant="outline" onClick={() => { setIsEditing(false); }}>{t.cancelButton}</Button>

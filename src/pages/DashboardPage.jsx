@@ -89,7 +89,7 @@ const DashboardPage = () => {
           className="mb-10"
         >
           <h1 className="text-4xl font-bold text-gray-800 dark:text-gray-100">{getGreeting()}, <span className={user.role === 'customer' ? "text-primary" : "text-purple-500 dark:text-purple-400"}>{currentUserData?.name || user.name}!</span></h1>
-          <p className="text-lg text-gray-600 dark:text-gray-300">{t.welcomeMessage.replace('{role}', user.role)}. Your User ID: <span className={`font-semibold ${user.role === 'customer' ? 'text-primary' : 'text-purple-500 dark:text-purple-400'}`}>{currentUserData?.numericId || user.numericId}</span></p>
+          <p className="text-lg text-gray-600 dark:text-gray-300">{t.welcomeMessage.replace('{role}', user.role)}. Your User ID: <span className={`font-semibold ${user.role === 'customer' ? 'text-primary' : 'text-purple-500 dark:text-purple-400'}`}>{currentUserData?.numeric_id || user.numeric_id}</span></p>
           {user.role === 'supplier' && currentUserData && currentUserData.balance !== undefined && (
             <p className="text-xl font-semibold text-purple-600 dark:text-purple-400 mt-2">{t.supplierBalance.replace('{balance}', parseFloat(currentUserData.balance || 0).toFixed(2))}</p>
           )}

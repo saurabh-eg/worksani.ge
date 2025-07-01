@@ -14,16 +14,15 @@ const itemVariants = {
 
 const ChangePasswordForm = ({ onChangePasswordSubmit, currentUILanguage }) => {
   const t = translations[currentUILanguage].profilePage;
-  // Removed currentPassword state, not needed for logged-in users
   const [newPassword, setNewPassword] = useState('');
   const [confirmNewPassword, setConfirmNewPassword] = useState('');
-  // Removed showCurrentPassword state
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmNewPassword, setShowConfirmNewPassword] = useState(false);
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onChangePasswordSubmit(newPassword, confirmNewPassword);
+    // Pass both newPassword and confirmNewPassword in correct order
+    onChangePasswordSubmit('', newPassword, confirmNewPassword);
     setNewPassword('');
     setConfirmNewPassword('');
   };
@@ -36,7 +35,6 @@ const ChangePasswordForm = ({ onChangePasswordSubmit, currentUILanguage }) => {
         </CardHeader>
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
-            {/* Removed current password field for logged-in users */}
             <div>
               <Label htmlFor="newPassword">{t.newPasswordLabel}</Label>
               <div className="relative">
