@@ -174,7 +174,9 @@ const SuppliersDirectoryPage = () => {
                       <p className="text-gray-600 line-clamp-3">{supplier.bio || t.suppliersPage.defaultBio}</p>
                       <div className="flex items-center text-yellow-500">
                         {[...Array(5)].map((_, i) => <Star key={i} size={16} className={i < Math.round(averageRating) ? "fill-current" : "text-gray-300"} />)}
-                        <span className="ml-1.5 text-xs text-gray-500">({supplier.reviews?.length || 0} {t.suppliersPage.reviewsText})</span>
+                        <span className="ml-1.5 text-xs text-gray-500">
+                          ({supplierReviews.length} {t.suppliersPage.reviewsText})
+                        </span>
                       </div>
                     </CardContent>
                     <CardFooter className="bg-slate-50/50 p-4 border-t border-purple-100 flex flex-col space-y-2">
@@ -183,13 +185,6 @@ const SuppliersDirectoryPage = () => {
                           {t.suppliersPage.viewProfileButton} <ArrowRight size={16} className="ml-2" />
                         </Button>
                       </Link>
-                      <Button
-                        variant="outline"
-                        className="w-full text-blue-600 border-blue-500 hover:bg-blue-50 hover:text-blue-700"
-                        onClick={() => handleRequestDetails(supplier.companyName || supplier.name)}
-                      >
-                        <ShieldQuestion size={16} className="mr-2" /> {t.suppliersPage.requestDetailsButton}
-                      </Button>
                     </CardFooter>
                   </Card>
                 </motion.div>
