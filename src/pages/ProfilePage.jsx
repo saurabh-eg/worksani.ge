@@ -141,26 +141,26 @@ const ProfilePage = () => {
     setNewGalleryFiles([]);
   };
 
- const handleChangePasswordSubmit = (newPasswordInput, confirmNewPasswordInput) => {
-  if (newPasswordInput.length < 6) {
-    toast({ title: "Password Too Short", description: "New password must be at least 6 characters.", variant: "destructive" });
-    return;
-  }
-  // Require at least one special character
+  const handleChangePasswordSubmit = (currentPasswordInput, newPasswordInput, confirmNewPasswordInput) => {
+    if (newPasswordInput.length < 6) {
+      toast({ title: "Password Too Short", description: "New password must be at least 6 characters.", variant: "destructive" });
+      return;
+    }
+     // Require at least one special character
   if (!/[!@#$%^&*(),.?":{}|<>]/.test(newPasswordInput)) {
     toast({ title: "Weak Password", description: "Password must include at least one special character (e.g. @, #, $, %, &, *).", variant: "destructive" });
     return;
   }
-  if (newPasswordInput !== confirmNewPasswordInput) {
-    toast({ title: "Passwords Don't Match", description: "New password and confirmation do not match.", variant: "destructive" });
-    return;
-  }
+    if (newPasswordInput !== confirmNewPasswordInput) {
+      toast({ title: "Passwords Don't Match", description: "New password and confirmation do not match.", variant: "destructive" });
+      return;
+    }
 
-  const success = changePassword(user.id, newPasswordInput);
-  if (success) {
-    toast({ title: t.passwordChangedSuccess, variant: "default" });
-  }
-};
+    const success = changePassword(user.id, newPasswordInput, currentPasswordInput, false);
+    if (success) {
+      toast({ title: t.passwordChangedSuccess, variant: "default" });
+    }
+  };
 
   if (!user) {
     return (

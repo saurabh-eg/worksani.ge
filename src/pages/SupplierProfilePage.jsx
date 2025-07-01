@@ -90,7 +90,7 @@ const SupplierProfilePage = () => {
       <div className="flex flex-col min-h-screen bg-gradient-to-br from-purple-500 via-purple-600 to-indigo-600 dark:from-slate-900 dark:via-slate-800 dark:to-gray-900">
         <Header />
         <main className="flex-grow container mx-auto px-4 py-8 text-center">
-           <Card className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm p-8 rounded-lg shadow-xl">
+          <Card className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm p-8 rounded-lg shadow-xl">
             <h1 className="text-2xl font-bold text-red-600 dark:text-red-400">{t.supplierProfilePage.notFoundTitle}</h1>
             <p className="text-gray-700 dark:text-gray-300">{t.supplierProfilePage.notFoundDesc}</p>
           </Card>
@@ -99,7 +99,7 @@ const SupplierProfilePage = () => {
       </div>
     );
   }
-  
+
   const calculateAverageRatings = (reviews = []) => {
     if (!reviews || reviews.length === 0) {
       return { overall: 0, professionalism: 0, quality: 0, cleanliness: 0, timeliness: 0, count: 0 };
@@ -125,17 +125,17 @@ const SupplierProfilePage = () => {
   };
 
   const averageRatings = calculateAverageRatings(approvedReviews);
-  
+
   const spokenLanguages = supplier.languages && supplier.languages.length > 0
     ? supplier.languages.map(langId => allLanguages.find(l => l.id === langId)?.label || langId).join(', ')
     : t.supplierProfilePage.notSpecified;
 
   const getVerificationBadge = (status) => {
     const tRoles = t.roles || {};
-    switch(status) {
-      case 'verified': return <Badge variant="default" className="bg-green-400 text-green-900 dark:bg-green-500 dark:text-green-50 flex items-center text-xs shadow-md"><CheckCircle size={12} className="mr-1"/> {tRoles.supplier || 'Supplier'} Verified</Badge>;
-      case 'pending': return <Badge variant="secondary" className="bg-yellow-400 text-yellow-900 dark:bg-yellow-500 dark:text-yellow-50 flex items-center text-xs shadow-md"><Clock size={12} className="mr-1"/> {tRoles.supplier || 'Supplier'} Pending</Badge>;
-      case 'rejected': return <Badge variant="destructive" className="bg-red-400 text-red-900 dark:bg-red-500 dark:text-red-50 flex items-center text-xs shadow-md"><XCircle size={12} className="mr-1"/> {tRoles.supplier || 'Supplier'} Rejected</Badge>;
+    switch (status) {
+      case 'verified': return <Badge variant="default" className="bg-green-400 text-green-900 dark:bg-green-500 dark:text-green-50 flex items-center text-xs shadow-md"><CheckCircle size={12} className="mr-1" /> {tRoles.supplier || 'Supplier'} Verified</Badge>;
+      case 'pending': return <Badge variant="secondary" className="bg-yellow-400 text-yellow-900 dark:bg-yellow-500 dark:text-yellow-50 flex items-center text-xs shadow-md"><Clock size={12} className="mr-1" /> {tRoles.supplier || 'Supplier'} Pending</Badge>;
+      case 'rejected': return <Badge variant="destructive" className="bg-red-400 text-red-900 dark:bg-red-500 dark:text-red-50 flex items-center text-xs shadow-md"><XCircle size={12} className="mr-1" /> {tRoles.supplier || 'Supplier'} Rejected</Badge>;
       default: return <Badge variant="outline" className="text-xs border-purple-400 text-purple-700 dark:border-purple-600 dark:text-purple-300 shadow-sm">{status}</Badge>;
     }
   };
@@ -196,7 +196,7 @@ const SupplierProfilePage = () => {
                   <h1 className="text-4xl font-extrabold text-shadow drop-shadow-lg">{supplier.companyName || supplier.name}</h1>
                   <p className="text-xs mt-1 text-purple-200 dark:text-purple-300">
                     ID: {
-                      supplier.numeric_id 
+                      supplier.numeric_id
                     }
                   </p>
                   <div className="flex items-center justify-center md:justify-start mt-3 space-x-1">
@@ -236,11 +236,11 @@ const SupplierProfilePage = () => {
                 </div>
                 {/* --- end right-side info --- */}
                 {user && user.role === 'customer' && supplier.verificationStatus === 'verified' && (
-                  <Button 
-                    onClick={() => navigate('/messages', { state: { prefillChatWith: supplier.id, prefillSubject: `${t.messagesPage.inquirySubjectPrefix} ${supplier.companyName || supplier.name}'s services` }})}
+                  <Button
+                    onClick={() => navigate('/messages', { state: { prefillChatWith: supplier.id, prefillSubject: `${t.messagesPage.inquirySubjectPrefix} ${supplier.companyName || supplier.name}'s services` } })}
                     className="ml-auto mt-4 md:mt-0 bg-white/90 text-purple-700 hover:bg-purple-200 dark:bg-purple-700 dark:text-purple-100 dark:hover:bg-purple-600 shadow-lg font-semibold rounded-full px-6 py-3"
                   >
-                    <MessageSquareIcon size={18} className="mr-2"/> {t.supplierProfilePage.contactSupplierButton}
+                    <MessageSquareIcon size={18} className="mr-2" /> {t.supplierProfilePage.contactSupplierButton}
                   </Button>
                 )}
               </div>
@@ -252,24 +252,24 @@ const SupplierProfilePage = () => {
                   <Briefcase size={22} className="text-purple-400" /> {t.supplierProfilePage.aboutTitle}
                 </h2>
                 <p className="text-gray-700 dark:text-gray-300 leading-relaxed">{supplier.bio || t.supplierProfilePage.noDescription}</p>
-              
+
                 <h2 className="text-2xl font-bold text-purple-700 dark:text-purple-400 mt-8 mb-3 border-b-2 border-purple-200 dark:border-purple-700 pb-2 flex items-center gap-2">
-                  <LanguagesIcon size={22} className="text-indigo-500 dark:text-indigo-400"/> {t.supplierProfilePage.languagesTitle}
+                  <LanguagesIcon size={22} className="text-indigo-500 dark:text-indigo-400" /> {t.supplierProfilePage.languagesTitle}
                 </h2>
                 <p className="text-gray-700 dark:text-gray-300 leading-relaxed">{spokenLanguages}</p>
               </section>
 
               <aside className="md:col-span-1 space-y-6">
-                
+
                 <Card className="bg-purple-100/60 dark:bg-slate-700/60 p-4 shadow rounded-xl">
-                  <CardTitle className="text-lg font-semibold text-purple-700 dark:text-purple-400 mb-2 flex items-center"><Star size={20} className="mr-2"/>{t.supplierProfilePage.ratingsTitle}</CardTitle>
+                  <CardTitle className="text-lg font-semibold text-purple-700 dark:text-purple-400 mb-2 flex items-center"><Star size={20} className="mr-2" />{t.supplierProfilePage.ratingsTitle}</CardTitle>
                   {averageRatings.count > 0 ? (
                     <>
                       <RatingDisplay label={t.projectReviewForm.ratingCategories.professionalism} score={averageRatings.professionalism} />
                       <RatingDisplay label={t.projectReviewForm.ratingCategories.quality} score={averageRatings.quality} />
                       <RatingDisplay label={t.projectReviewForm.ratingCategories.cleanliness} score={averageRatings.cleanliness} />
                       <RatingDisplay label={t.projectReviewForm.ratingCategories.timeliness} score={averageRatings.timeliness} />
-                      <hr className="my-2 border-purple-200 dark:border-slate-600"/>
+                      <hr className="my-2 border-purple-200 dark:border-slate-600" />
                       <RatingDisplay label={t.projectReviewForm.ratingCategories.overall} score={averageRatings.overall} />
                     </>
                   ) : (
@@ -302,8 +302,8 @@ const SupplierProfilePage = () => {
                       // Extract url from photo object or use string directly
                       const galleryImageUrl = photosArr.length > 0 ? (typeof photosArr[0] === 'string' ? photosArr[0] : photosArr[0].url) : null;
                       return (
-                        <motion.div 
-                          key={project.id || index} 
+                        <motion.div
+                          key={project.id || index}
                           className="relative aspect-video rounded-xl overflow-hidden shadow-lg group border-2 border-purple-200 dark:border-purple-700 hover:border-purple-400 dark:hover:border-purple-500 transition-all cursor-pointer bg-white dark:bg-slate-800"
                           whileHover={{ scale: 1.04 }}
                           transition={{ type: "spring", stiffness: 300 }}
@@ -339,7 +339,7 @@ const SupplierProfilePage = () => {
                 <Dialog open={galleryModalOpen} onOpenChange={setGalleryModalOpen}>
                   <DialogContent
                     className="max-w-3xl p-0 bg-black/60 dark:bg-black/80 shadow-none rounded-2xl"
-                    aria-describedby="gallery-description"
+                    aria-describedby={undefined}
                     role="dialog"
                   >
                     <div className="relative bg-white dark:bg-slate-900 rounded-2xl overflow-hidden">
@@ -351,7 +351,7 @@ const SupplierProfilePage = () => {
                             onClick={handleCloseGallery}
                             aria-label="Close gallery"
                           >
-                            ×
+                            
                           </button>
                         </DialogClose>
                       </DialogHeader>
@@ -416,7 +416,7 @@ const SupplierProfilePage = () => {
                         </div>
                       </div>
                     </div>
-                  </DialogContent>
+                  </DialogContent >
                 </Dialog>
               </section>
 
