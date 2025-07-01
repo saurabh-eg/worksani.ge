@@ -138,7 +138,7 @@ const SupplierWalletPage = () => {
               </CardHeader>
               <CardContent>
                 {currentUserData.transaction_history && currentUserData.transaction_history.length > 0 ? (
-                  <div className="overflow-x-auto">
+                  <div className="overflow-x-auto max-h-96 overflow-y-auto scrollbar-hide">
                     <Table>
                       <TableHeader>
                         <TableRow className="border-b border-purple-600">
