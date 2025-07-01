@@ -18,7 +18,7 @@ import { translations } from '@/lib/translations';
 
 
 const SuppliersDirectoryPage = () => {
-  const { users } = useData();
+  const { users, projects } = useData();
   const { language } = useAuth();
   const t = translations[language];
   const navigate = useNavigate();
@@ -26,7 +26,7 @@ const SuppliersDirectoryPage = () => {
 
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
-  const [locationFilter, setLocationFilter] = useState(''); 
+  const [locationFilter, setLocationFilter] = useState('');
 
   const suppliers = useMemo(() => {
     return users.filter(user => user.role === 'supplier');
@@ -43,11 +43,11 @@ const SuppliersDirectoryPage = () => {
       const nameMatch = (supplier.name?.toLowerCase() || '').includes(searchLower);
       const companyNameMatch = (supplier.companyName?.toLowerCase() || '').includes(searchLower);
       const bioMatch = (supplier.bio?.toLowerCase() || '').includes(searchLower);
-      
+
       const categoryMatch = categoryFilter === 'all' || (supplier.category || '').toLowerCase() === categoryFilter.toLowerCase();
-      
+
       return (nameMatch || companyNameMatch || bioMatch) && categoryMatch;
-    }).sort((a,b) => (a.companyName || a.name).localeCompare(b.companyName || b.name));
+    }).sort((a, b) => (a.companyName || a.name).localeCompare(b.companyName || b.name));
   }, [suppliers, searchTerm, categoryFilter, locationFilter]);
 
   const cardVariants = {
@@ -57,9 +57,9 @@ const SuppliersDirectoryPage = () => {
 
   const handleRequestDetails = (supplierName) => {
     toast({
-        title: t.suppliersPage.toastRequestSentTitle,
-        description: `${t.suppliersPage.toastRequestSentDesc} ${supplierName}. ${t.suppliersPage.adminWillContact}`,
-        duration: 5000,
+      title: t.suppliersPage.toastRequestSentTitle,
+      description: `${t.suppliersPage.toastRequestSentDesc} ${supplierName}. ${t.suppliersPage.adminWillContact}`,
+      duration: 5000,
     });
     // Here you might want to send an actual request to admin via DataContext if implemented
     // For now, a toast notification will suffice.
@@ -117,7 +117,7 @@ const SuppliersDirectoryPage = () => {
             </div>
             <div>
               <Label htmlFor="location-supplier" className="text-sm font-medium text-purple-700">{t.suppliersPage.locationLabel}</Label>
-               <div className="relative">
+              <div className="relative">
                 <Input
                   id="location-supplier"
                   type="text"
@@ -125,9 +125,9 @@ const SuppliersDirectoryPage = () => {
                   value={locationFilter}
                   onChange={(e) => setLocationFilter(e.target.value)}
                   className="mt-1 pl-10 border-purple-300 focus:border-purple-500 focus:ring-purple-500"
-                  disabled 
+                  disabled
                 />
-                 <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
               </div>
             </div>
           </div>
@@ -136,7 +136,21 @@ const SuppliersDirectoryPage = () => {
         {filteredSuppliers.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {filteredSuppliers.map((supplier, index) => {
-               const averageRating = supplier.reviews?.length ? supplier.reviews.reduce((acc, review) => acc + review.rating, 0) / supplier.reviews.length : 0;
+              const supplierReviews = useMemo(() => {
+                return projects
+                  .filter(
+                    (p) =>
+                      p.awardedSupplierId === supplier.id &&
+                      p.review &&
+                      (p.review.supplierId === supplier.id || p.review.supplier_id === supplier.id) &&
+                      (p.review.status === 'approved' || p.review.status === 'Approved')
+                  )
+                  .map((p) => p.review);
+              }, [projects, supplier.id]);
+
+              const averageRating = supplierReviews.length
+                ? supplierReviews.reduce((acc, review) => acc + (review.rating_overall ?? review.ratings?.overall ?? 0), 0) / supplierReviews.length
+                : 0;
               return (
                 <motion.div
                   key={supplier.id}
@@ -148,7 +162,7 @@ const SuppliersDirectoryPage = () => {
                   <Card className="h-full flex flex-col overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 border-purple-200 hover:border-purple-400">
                     <CardHeader className="items-center text-center p-6 bg-gradient-to-br from-purple-100 to-green-100">
                       <Avatar className="w-24 h-24 mb-3 border-4 border-white shadow-md">
-                        <AvatarImage src={supplier.profilePhoto || `https://avatar.vercel.sh/${supplier.email}.png?size=96`} alt={supplier.companyName || supplier.name} />
+                        <AvatarImage src={supplier.profile_photo_url || `https://avatar.vercel.sh/${supplier.email}.png?size=96`} alt={supplier.companyName || supplier.name} />
                         <AvatarFallback className="text-2xl bg-purple-200 text-purple-700">{supplier.name?.charAt(0) || 'S'}</AvatarFallback>
                       </Avatar>
                       <CardTitle className="text-xl font-semibold text-purple-700 hover:text-purple-900 transition-colors">
@@ -169,8 +183,8 @@ const SuppliersDirectoryPage = () => {
                           {t.suppliersPage.viewProfileButton} <ArrowRight size={16} className="ml-2" />
                         </Button>
                       </Link>
-                      <Button 
-                        variant="outline" 
+                      <Button
+                        variant="outline"
                         className="w-full text-blue-600 border-blue-500 hover:bg-blue-50 hover:text-blue-700"
                         onClick={() => handleRequestDetails(supplier.companyName || supplier.name)}
                       >

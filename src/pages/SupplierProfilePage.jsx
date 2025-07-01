@@ -189,7 +189,7 @@ const SupplierProfilePage = () => {
             <div className="bg-gradient-to-r from-purple-700 via-purple-600 to-indigo-700 p-8 text-white rounded-t-2xl shadow-lg">
               <div className="flex flex-col md:flex-row items-center gap-8">
                 <Avatar className="w-32 h-32 border-4 border-purple-300 dark:border-purple-500 shadow-xl ring-4 ring-white/30 dark:ring-slate-900/40">
-                  <AvatarImage src={supplier.profilePhoto || `https://avatar.vercel.sh/${supplier.email}.png?size=128`} alt={supplier.name} />
+                  <AvatarImage src={supplier.profile_photo_url || `https://avatar.vercel.sh/${supplier.email}.png?size=128`} alt={supplier.name} />
                   <AvatarFallback className="text-4xl bg-purple-700 dark:bg-purple-800">{supplier.name?.charAt(0).toUpperCase() || <UserCircle />}</AvatarFallback>
                 </Avatar>
                 <div className="text-center md:text-left flex-1">
