@@ -40,6 +40,22 @@ export const useProjectData = (
               supplier_profile_photo_url,
               message,
               supplier_numeric_id
+            ),
+            review: reviews!projects_review_id_fkey (
+              id,
+              project_id,
+              reviewer_id,
+              supplier_id,
+              rating_overall,
+              rating_professionalism,
+              rating_quality,
+              rating_cleanliness,
+              rating_timeliness,
+              comment,
+              status,
+              created_at,
+              reviewer_name,
+              reviewer_numeric_id
             )
           `)
           .order('created_at', { ascending: false });
@@ -50,32 +66,53 @@ export const useProjectData = (
           return;
         }
 
-        if (data) {
-          // Map created_at to postedDate for frontend consistency
-          const mappedData = data.map(project => ({
-            ...project,
-            postedDate: project.created_at,
-            customerId: project.user_id,  // map user_id to customerId for UI compatibility
-            customerNumericId: project.customer_numeric_id,
-            awardedSupplierId: project.awarded_supplier_id,
-            awardedBidId: project.awarded_bid_id,
-            awardedAmount: project.awarded_amount,
-            // Map bids fields to camelCase and supplierId
-            bids: (project.bids || []).map(bid => ({
-              id: bid.id,
-              projectId: bid.project_id,
-              supplierId: bid.bidder_id, // <--- use bidder_id as supplierId
-              amount: bid.amount,
-              date: bid.created_at,
-              supplierName: bid.supplier_name,
-              supplierProfilePhoto: bid.supplier_profile_photo_url,
-              message: bid.message,
-              supplierNumericId: bid.supplier_numeric_id,
-            })),
-          }));
-          setProjects(mappedData);
-          localStorage.setItem('projects_worksani', JSON.stringify(mappedData));
-        }
+          if (data) {
+            // Map created_at to postedDate for frontend consistency
+            const mappedData = data.map(project => ({
+              ...project,
+              postedDate: project.created_at,
+              customerId: project.customer_id,  // map customer_id to customerId for UI compatibility
+              customerNumericId: project.customer_numeric_id,
+              awardedSupplierId: project.awarded_supplier_id,
+              awardedBidId: project.awarded_bid_id,
+              awardedAmount: project.awarded_amount,
+              // Map bids fields to camelCase and supplierId
+              bids: (project.bids || []).map(bid => ({
+                id: bid.id,
+                projectId: bid.project_id,
+                supplierId: bid.bidder_id, // <--- use bidder_id as supplierId
+                amount: bid.amount,
+                date: bid.created_at,
+                supplierName: bid.supplier_name,
+                supplierProfilePhoto: bid.supplier_profile_photo_url,
+                message: bid.message,
+                supplierNumericId: bid.supplier_numeric_id,
+              })),
+              // Map review fields to camelCase and ratings object
+              review: project.review ? {
+                id: project.review.id,
+                projectId: project.review.project_id,
+                reviewerId: project.review.reviewer_id,
+                supplierId: project.review.supplier_id,
+                ratings: {
+                  overall: project.review.rating_overall,
+                  professionalism: project.review.rating_professionalism,
+                  quality: project.review.rating_quality,
+                  cleanliness: project.review.rating_cleanliness,
+                  timeliness: project.review.rating_timeliness,
+                },
+                comment: project.review.comment,
+                status: project.review.status,
+                date: project.review.created_at,
+                reviewerName: project.review.reviewer_name,
+                reviewerNumericId: project.review.reviewer_numeric_id,
+              } : null,
+              // Ensure photos is always an array
+              photos: Array.isArray(project.photos) ? project.photos : (project.photos ? JSON.parse(project.photos) : []),
+            }));
+            setProjects(mappedData);
+            localStorage.setItem('projects_worksani', JSON.stringify(mappedData));
+          }
       } catch (err) {
         console.error('Unexpected error fetching projects:', err);
         toast({ title: "Error", description: err.message || "Unexpected error fetching projects.", variant: "destructive" });
@@ -118,7 +155,12 @@ export const useProjectData = (
     return newProject;
   }, [currentUser, siteSettings, deductProjectFeeFunc, toast]);
 
-  const updateProject = useCallback(async (projectId, updatedProjectData) => {
+  const updateProject = useCallback(async (projectId, updatedProjectData, optimisticOnly = false) => {
+    // Optimistically update local state immediately
+    setProjects(prevProjects => prevProjects.map(p =>
+      p.id === projectId ? { ...p, ...updatedProjectData } : p
+    ));
+    if (optimisticOnly) return;
     try {
       // Map camelCase keys to snake_case for Supabase update
       const mappedData = {
@@ -147,22 +189,44 @@ export const useProjectData = (
         paymentStatus: undefined,
         bids: undefined,
         postedDate: undefined,
-        id: undefined,
       };
 
-      // Remove undefined keys
-      Object.keys(mappedData).forEach(key => mappedData[key] === undefined && delete mappedData[key]);
+      // Robustly set review_id: prefer review_id, then review.id, else omit
+      let reviewId = null;
+      if (typeof updatedProjectData.review_id === 'string' && updatedProjectData.review_id.length > 0) {
+        reviewId = updatedProjectData.review_id;
+      } else if (updatedProjectData.review && typeof updatedProjectData.review.id === 'string' && updatedProjectData.review.id.length > 0) {
+        reviewId = updatedProjectData.review.id;
+      }
+      if (reviewId) {
+        mappedData.review_id = reviewId;
+      } else {
+        delete mappedData.review_id;
+      }
+
+      // Remove id from update payload (never update primary key)
+      delete mappedData.id;
+
+      // Remove undefined keys and keys not in projects table schema
+      const validKeys = new Set([
+        'user_id', 'title', 'description', 'budget', 'customer_id', 'customer_numeric_id',
+        'category', 'location', 'photos', 'status', 'payment_status',
+        'awarded_supplier_id', 'awarded_bid_id', 'awarded_amount', 'review_id'
+      ]);
+      Object.keys(mappedData).forEach(key => {
+        if (mappedData[key] === undefined || !validKeys.has(key)) {
+          delete mappedData[key];
+        }
+      });
 
       // Update project in Supabase
       const { data, error } = await supabase
         .from('projects')
         .update(mappedData)
         .eq('id', projectId)
-        .select()
-        .single();
+        .select();
 
       if (error) {
-        console.error('Error updating project in Supabase:', error);
         toast({ title: "Error", description: error.message || "Failed to update project.", variant: "destructive" });
         return null;
       }
@@ -174,9 +238,7 @@ export const useProjectData = (
 
       return data;
     } catch (err) {
-      console.error('Unexpected error updating project:', err);
       toast({ title: "Error", description: err.message || "Unexpected error updating project.", variant: "destructive" });
-      return null;
     }
   }, [toast]);
 
@@ -210,7 +272,9 @@ export const useProjectData = (
       const { error } = await supabase
         .from('projects')
         .delete()
-        .eq('id', projectId);
+        .eq('id', projectId)
+        .select()
+        .single();  
 
       if (error) {
         toast({ title: "Error", description: error.message || "Failed to delete project.", variant: "destructive" });
