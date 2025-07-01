@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/components/ui/use-toast';
@@ -158,7 +157,15 @@ export const AuthProvider = ({ children }) => {
 
     if (signUpError) {
       setLoading(false);
-      toast({ title: t.auth?.registrationFailedTitle || "Registration Failed", description: signUpError.message, variant: "destructive" });
+      if (
+        signUpError.message.toLowerCase().includes("already registered") ||
+        signUpError.message.toLowerCase().includes("user already registered") ||
+        signUpError.message.toLowerCase().includes("email")
+      ) {
+        toast({ title: "Email Already Registered", description: "This email is already in use. Please log in or use a different email.", variant: "destructive" });
+      } else {
+        toast({ title: t.auth?.registrationFailedTitle || "Registration Failed", description: signUpError.message, variant: "destructive" });
+      }
       throw signUpError;
     }
     
@@ -253,6 +260,22 @@ export const AuthProvider = ({ children }) => {
     setLanguage(langCode);
   };
 
+  const resetPassword = async (email) => {
+    setLoading(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: 'https://worksani.com', // Change this to your reset password page URL
+    });
+
+    if (error) {
+      setLoading(false);
+      toast({ title: t.auth?.resetPasswordErrorTitle || "Reset Password Error", description: error.message, variant: "destructive" });
+      throw error;
+    }
+
+    setLoading(false);
+    toast({ title: t.auth?.resetPasswordSuccessTitle || "Reset Password Link Sent", description: t.auth?.resetPasswordSuccessDesc || "Please check your email for the password reset link.", variant: "default" });
+  };
+
   const value = {
     user,
     setUser, 
@@ -267,6 +290,7 @@ export const AuthProvider = ({ children }) => {
     updateUserContextProfile,
     language,
     changeLanguage,
+    resetPassword,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

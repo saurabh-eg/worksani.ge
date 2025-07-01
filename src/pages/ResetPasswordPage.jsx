@@ -9,12 +9,14 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { useToast } from '@/components/ui/use-toast';
 import { KeyRound, Mail, ArrowLeft, Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useAuth } from '@/contexts/AuthContext';
 
 const ResetPasswordPage = () => {
   const [email, setEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [step, setStep] = useState('email'); // 'email' or 'confirmation'
   const { toast } = useToast();
+  const { resetPassword, loading } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -26,12 +28,20 @@ const ResetPasswordPage = () => {
     setIsSubmitting(true);
     // Simulate API call
     setTimeout(() => {
-      toast({ 
-        title: "Reset Instructions Sent", 
-        description: "If an account exists with this email, you will receive password reset instructions.", 
-      });
-      setStep('confirmation');
-      setIsSubmitting(false);
+      resetPassword(email)
+        .then(() => {
+          toast({ 
+            title: "Reset Instructions Sent", 
+            description: "If an account exists with this email, you will receive password reset instructions.", 
+          });
+          setStep('confirmation');
+        })
+        .catch((error) => {
+          toast({ title: "Error", description: error.message, variant: "destructive" });
+        })
+        .finally(() => {
+          setIsSubmitting(false);
+        });
     }, 1500);
   };
 

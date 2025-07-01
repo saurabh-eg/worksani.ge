@@ -14,17 +14,16 @@ const itemVariants = {
 
 const ChangePasswordForm = ({ onChangePasswordSubmit, currentUILanguage }) => {
   const t = translations[currentUILanguage].profilePage;
-  const [currentPassword, setCurrentPassword] = useState('');
+  // Removed currentPassword state, not needed for logged-in users
   const [newPassword, setNewPassword] = useState('');
   const [confirmNewPassword, setConfirmNewPassword] = useState('');
-  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  // Removed showCurrentPassword state
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmNewPassword, setShowConfirmNewPassword] = useState(false);
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onChangePasswordSubmit(currentPassword, newPassword, confirmNewPassword);
-    setCurrentPassword('');
+    onChangePasswordSubmit(newPassword, confirmNewPassword);
     setNewPassword('');
     setConfirmNewPassword('');
   };
@@ -37,15 +36,7 @@ const ChangePasswordForm = ({ onChangePasswordSubmit, currentUILanguage }) => {
         </CardHeader>
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
-            <div>
-              <Label htmlFor="currentPassword">{t.currentPasswordLabel}</Label>
-              <div className="relative">
-                <Input id="currentPassword" type={showCurrentPassword ? "text" : "password"} value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} required />
-                <Button type="button" variant="ghost" size="icon" className="absolute right-1 top-1/2 transform -translate-y-1/2 h-7 w-7" onClick={() => setShowCurrentPassword(!showCurrentPassword)}>
-                  {showCurrentPassword ? <EyeOff size={16}/> : <Eye size={16}/>}
-                </Button>
-              </div>
-            </div>
+            {/* Removed current password field for logged-in users */}
             <div>
               <Label htmlFor="newPassword">{t.newPasswordLabel}</Label>
               <div className="relative">

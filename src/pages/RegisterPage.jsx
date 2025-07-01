@@ -62,6 +62,15 @@ const RegisterPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (password.length < 6) {
+      toast({ title: "Password Too Short", description: "Password must be at least 6 characters.", variant: "destructive" });
+      return;
+    }
+    // Require at least one special character
+    if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
+      toast({ title: "Weak Password", description: "Password must include at least one special character (e.g. @, #, $, %, &, *).", variant: "destructive" });
+      return;
+    }
     if (password !== confirmPassword) {
       toast({ title: "Password Mismatch", description: "Passwords do not match.", variant: "destructive" });
       return;
@@ -92,7 +101,7 @@ const RegisterPage = () => {
         };
       }
       await register(userData);
-      // Navigation is handled in AuthContext based on role and verification status
+      // Navigation is handled in AuthContext
     } catch (error) {
       // Toast is handled in AuthContext
     } finally {
