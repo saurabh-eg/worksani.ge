@@ -188,7 +188,7 @@ const PostProjectPage = () => {
                     <SelectTrigger id="category" className="text-base py-3 focus:ring-purple-500 focus:border-purple-500 dark:bg-slate-700 dark:border-slate-600 dark:text-white">
                       <SelectValue placeholder={t.categoryPlaceholder || "Select a category"} />
                     </SelectTrigger>
-                    <SelectContent className="dark:bg-slate-700 dark:text-white">
+                    <SelectContent className="dark:bg-slate-700 dark:text-white max-h-60 overflow-y-auto">
                       {projectCategories.map(cat => (
                         <SelectItem key={cat} value={cat} className="capitalize text-base dark:focus:bg-slate-600">{categoriesT[cat] || cat}</SelectItem>
                       ))}

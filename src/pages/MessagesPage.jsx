@@ -46,13 +46,18 @@ const MessagesPage = () => {
 
   // Prefill chat if navigated with state
   useEffect(() => {
-    if (location.state?.prefillChatWith) {
+    if (
+      location.state?.prefillChatWith &&
+      !selectedChatPartner
+    ) {
       const partner = users.find(u => u.id === location.state.prefillChatWith);
       if (partner) {
-        handleSelectChatPartner(partner);
+        setSelectedChatPartner(partner);
+        // Only clear location.state if it is set
+        navigate(location.pathname, { replace: true, state: {} });
       }
     }
-  }, [location.state, users]);
+  }, [location.state, users, selectedChatPartner, navigate, location.pathname]);
 
   // Update current messages when chat partner or user changes
   const currentMessages = selectedChatPartner && user
