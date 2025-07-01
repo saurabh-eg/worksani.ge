@@ -205,13 +205,13 @@ const ProjectsPage = () => {
                       </div>
                       <CardDescription className="text-xs text-gray-500 dark:text-gray-400 pt-1">
                         {projectsPageTranslations.postedOn || 'Posted on'}: {new Date(project.postedDate).toLocaleDateString()}
-                        {customer && ` ${projectsPageTranslations.by || 'by'} ${customer.name} (ID: ${customer.numericId})`}
+                        {customer && ` ${projectsPageTranslations.by || 'by'} ${customer.name} (ID: ${customer.numeric_id})`}
                       </CardDescription>
                     </CardHeader>
                     <CardContent className="pt-4 pb-3 flex-grow">
                       <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-3 mb-3">{project.description}</p>
                       <>
-                        <p><span className="font-medium text-gray-700 dark:text-gray-300">{projectsPageTranslations.categoryLabel || 'Category'}:</span> <Badge variant="outline" className="capitalize text-purple-700 border-purple-300 dark:text-purple-300 dark:border-purple-600">{categoriesTranslations[project.category] || project.category}</Badge></p>
+                        <div><span className="font-medium text-gray-700 dark:text-gray-300">{projectsPageTranslations.categoryLabel || 'Category'}:</span> <Badge variant="outline" className="capitalize text-purple-700 border-purple-300 dark:text-purple-300 dark:border-purple-600">{categoriesTranslations[project.category] || project.category}</Badge></div>
                         <p><span className="font-medium text-gray-700 dark:text-gray-300">{projectsPageTranslations.budgetLabel || 'Budget'}:</span> <span className="font-semibold text-green-600 dark:text-green-400">₾{project.budget}</span></p>
                         <p><span className="font-medium text-gray-700 dark:text-gray-300">{projectsPageTranslations.locationLabel || 'Location'}:</span> {project.location}</p>
                       </>
