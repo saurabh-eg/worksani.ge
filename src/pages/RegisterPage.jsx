@@ -185,7 +185,7 @@ const RegisterPage = () => {
                     minLength="6"
                     className="focus:ring-green-500 focus:border-green-500"
                   />
-                  <Button type="button" variant="ghost" size="icon" className="absolute right-2 top-[calc(1.5rem+0.5rem+2px)] transform -translate-y-1/2 h-7 w-7 text-gray-500 hover:text-green-600" onClick={() => setShowPassword(!showPassword)}>
+                  <Button type="button" variant="ghost" size="icon" className="absolute right-2 top-2/3 -translate-y-1/2 h-7 w-7 text-gray-500 hover:text-green-600"lassName="absolute right-2 top-[calc(1.5rem+0.5rem+2px)] transform -translate-y-1/2 h-7 w-7 text-gray-500 hover:text-green-600" onClick={() => setShowPassword(!showPassword)}>
                     {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                   </Button>
                 </div>
@@ -202,7 +202,7 @@ const RegisterPage = () => {
                     minLength="6"
                     className="focus:ring-green-500 focus:border-green-500"
                   />
-                  <Button type="button" variant="ghost" size="icon" className="absolute right-2 top-[calc(1.5rem+0.5rem+2px)] transform -translate-y-1/2 h-7 w-7 text-gray-500 hover:text-green-600" onClick={() => setShowConfirmPassword(!showConfirmPassword)}>
+                  <Button type="button" variant="ghost" size="icon" className="absolute right-2 top-2/3 -translate-y-1/2 h-7 w-7 text-gray-500 hover:text-green-600"lassName="absolute right-2 top-[calc(1.5rem+0.5rem+2px)] transform -translate-y-1/2 h-7 w-7 text-gray-500 hover:text-green-600" onClick={() => setShowConfirmPassword(!showConfirmPassword)}>
                     {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                   </Button>
                 </div>
