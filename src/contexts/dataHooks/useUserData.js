@@ -263,23 +263,28 @@ export const useUserData = () => {
   }, [toast, t, language]);
 
   const deleteUserData = useCallback(async (userId, mapProjectsFunc) => {
-    // First, delete from auth.users - this requires admin privileges for Supabase client
-    // This is typically done via a trusted server-side function or with service_role key.
-    // Client-side admin.deleteUser might be restricted.
-    // For now, we'll attempt it, but it might fail if RLS/permissions don't allow.
-    // Consider an Edge Function for this.
-    const { error: authError } = await supabase.auth.admin.deleteUser(userId);
-    if (authError && authError.message !== 'User not found' && authError.message !== 'No user found with that UID') {
-      toast({ title: "Auth Deletion Error", description: `Could not delete user from authentication system: ${authError.message}. Profile deletion will still be attempted.`, variant: "warning" });
-    }
-
-    const { error: profileError } = await supabase.from('profiles').delete().eq('id', userId);
-    if (profileError) {
-      toast({ title: "Profile Deletion Error", description: profileError.message, variant: "destructive" });
-    } else {
+    // Use Supabase Edge Function for admin delete
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const jwt = session?.access_token;
+      if (!jwt) throw new Error("No admin session found.");
+      const response = await fetch('https://rvqfqneuvwggcnsmpcpw.supabase.co/functions/v1/admin-delete-user', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${jwt}`
+        },
+        body: JSON.stringify({ userId })
+      });
+      const result = await response.json();
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || 'Failed to delete user.');
+      }
       setUsersData(prevUsers => prevUsers.filter(u => u.id !== userId));
       if (mapProjectsFunc) mapProjectsFunc(userId);
-      toast({ title: "User Deleted", description: "User profile has been deleted. Associated auth user deletion might require server-side action if failed.", variant: "default" });
+      toast({ title: "User Deleted", description: "User profile and authentication have been deleted.", variant: "default" });
+    } catch (err) {
+      toast({ title: "Delete User Failed", description: err.message, variant: "destructive" });
     }
   }, [toast]);
 
@@ -293,10 +298,28 @@ export const useUserData = () => {
       toast({ title: "Password Changed", description: "Your password has been updated successfully.", variant: "default" });
       return true;
     } else { // Admin attempting to change another user's password
-      // This requires Supabase Admin API, typically via an Edge Function for security.
-      // supabase.auth.admin.updateUserById(userId, { password: newPassword })
-      toast({ title: "Admin Password Change Not Implemented", description: "Changing other users' passwords requires a secure server-side function. This feature is not available from the client.", variant: "info" });
-      return false;
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        const jwt = session?.access_token;
+        if (!jwt) throw new Error("No admin session found.");
+        const response = await fetch('https://rvqfqneuvwggcnsmpcpw.supabase.co/functions/v1/change-password', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${jwt}`
+          },
+          body: JSON.stringify({ userId, newPassword })
+        });
+        const result = await response.json();
+        if (!response.ok || !result.success) {
+          throw new Error(result.error || 'Failed to change password.');
+        }
+        toast({ title: "Password Changed", description: "Password updated for user.", variant: "default" });
+        return true;
+      } catch (err) {
+        toast({ title: "Admin Password Change Failed", description: err.message, variant: "destructive" });
+        return false;
+      }
     }
   }, [toast]);
 
