@@ -111,7 +111,8 @@ const ProjectBidsSection = ({ project, user, users, onBidSubmit, onAcceptBid }) 
                 .sort((a, b) => new Date(b.date) - new Date(a.date))
                 .map(bid => {
                   const supplier = users?.find(u => u.id === bid.supplierId);
-                  const isAccepted = project.awardedBidId === bid.id && project.status === 'awarded';
+                  // Accept logic: accepted if awardedBidId matches, regardless of status
+                  const isAccepted = project.awardedBidId === bid.id;
                   return (
                     <Card key={bid.id} className={`shadow-md border-l-4 ${isAccepted ? 'border-green-500 bg-green-50 dark:bg-green-900/20' : 'border-purple-300 dark:border-purple-600 bg-white dark:bg-slate-800'}`}>
                       <CardHeader>
@@ -144,16 +145,23 @@ const ProjectBidsSection = ({ project, user, users, onBidSubmit, onAcceptBid }) 
                           >
                             <MessageSquare size={16} className="mr-2" /> {bidsT.chatButton || 'Chat'}
                           </Button>
+                          {/* Bid status button logic: show Completed if project is completed, else Pending/Accepted */}
                           <Button
                             size="sm"
                             disabled
-                            className={isAccepted
-                              ? "bg-green-500 text-white dark:bg-green-600"
-                              : "bg-yellow-400 text-white dark:bg-yellow-500"}
+                            className={
+                              project.status === 'Completed' && isAccepted
+                                ? 'bg-purple-700 text-white dark:bg-purple-800'
+                                : isAccepted
+                                  ? 'bg-green-500 text-white dark:bg-green-600'
+                                  : 'bg-yellow-400 text-white dark:bg-yellow-500'
+                            }
                           >
-                            {isAccepted
-                              ? (bidsT.bidAcceptedButton || 'Bid Accepted')
-                              : (bidsT.pendingButton || 'Pending')}
+                            {project.status === 'Completed' && isAccepted
+                              ? (bidsT.completedBidButton || 'Completed')
+                              : isAccepted
+                                ? (bidsT.bidAcceptedButton || 'Bid Accepted')
+                                : (bidsT.pendingButton || 'Pending')}
                           </Button>
                         </div>
                       </CardFooter>
