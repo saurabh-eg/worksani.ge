@@ -63,12 +63,10 @@ export const useUserData = () => {
         transaction_history: [...currentTransactionHistory, newTransaction]
       };
 
-      const { data: updatedUser, error } = await supabase
+      const { error } = await supabase
         .from('profiles')
         .update(updateData)
-        .eq('id', userId)
-        .select('*')
-        .single();
+        .eq('id', userId);
 
       if (error) {
         console.error('Update error:', error);
@@ -76,29 +74,27 @@ export const useUserData = () => {
         return false;
       }
 
-      if (updatedUser) {
-        // Update local state
-        setUsersData(prev => prev.map(u => u.id === userId ? {
-          ...u,
+      // Always update local state instantly after successful update
+      setUsersData(prev => prev.map(u => u.id === userId ? {
+        ...u,
+        [balanceField]: newBalance,
+        transaction_history: [...currentTransactionHistory, newTransaction]
+      } : u));
+
+      // Update user context if it's the current user
+      if (currentUser && currentUser.id === userId) {
+        updateUserContextProfile({
+          ...currentUser,
           [balanceField]: newBalance,
           transaction_history: [...currentTransactionHistory, newTransaction]
-        } : u));
-
-        // Update user context if it's the current user
-        if (currentUser && currentUser.id === userId) {
-          updateUserContextProfile({
-            ...currentUser,
-            [balanceField]: newBalance,
-            transaction_history: [...currentTransactionHistory, newTransaction]
-          });
-        }
-
-        toast({ 
-          title: "Balance Updated", 
-          description: `Successfully added ₾${numericAmount.toFixed(2)} to ${userToUpdate.role === 'supplier' ? 'bid' : 'wallet'} balance.` 
         });
-        return true;
       }
+
+      toast({ 
+        title: "Balance Updated", 
+        description: `Successfully added ₾${numericAmount.toFixed(2)} to ${userToUpdate.role === 'supplier' ? 'bid' : 'wallet'} balance.` 
+      });
+      return true;
     } catch (error) {
       console.error('TopUp error:', error);
       toast({ title: "Update Failed", description: error.message, variant: "destructive" });
