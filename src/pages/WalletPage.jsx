@@ -13,10 +13,13 @@ import { useToast } from '@/components/ui/use-toast';
 import { translations } from '@/lib/translations';
 
 const WalletPage = () => {
-  const { user, language } = useAuth();
-  const { siteSettings } = useData();
+  const { user: authUser, language } = useAuth();
+  const { siteSettings, getUserById } = useData();
   const { toast } = useToast();
   const t = translations[language].walletPage;
+
+  // Use the latest user data from global users context for real-time updates
+  const user = getUserById(authUser?.id) || authUser;
 
   // Use state to track balance changes
   const [currentBalance, setCurrentBalance] = useState(Number(user?.wallet_balance || 0));
@@ -24,7 +27,6 @@ const WalletPage = () => {
   // Update balance when user data changes
   useEffect(() => {
     const newBalance = Number(user?.wallet_balance || 0);
-    console.log('User balance updated:', newBalance);
     setCurrentBalance(newBalance);
   }, [user?.wallet_balance]);
 
