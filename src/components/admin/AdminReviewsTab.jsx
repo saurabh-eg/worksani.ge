@@ -51,11 +51,36 @@ const AdminReviewsTab = ({ projects, users, onUpdateProject, onDeleteReview }) =
     (review.status?.toLowerCase() || '').includes(searchTerm.toLowerCase())
   );
 
-  const handleReviewDelete = (projectId) => {
-    if (window.confirm(t.confirmDeleteReview || "Are you sure you want to delete this review?")) {
-      onDeleteReview(projectId);
-      toast({ title: t.reviewDeletedTitle || "Review Deleted", description: t.reviewDeletedDesc || "The review has been removed." });
+  const handleReviewDelete = async (projectId, reviewId) => {
+    const reviewToDelete = reviews.find(r => r.projectId === projectId && r.id === reviewId);
+    if (!reviewToDelete) return;
+    if (!window.confirm(t.confirmDeleteReview || "Are you sure you want to delete this review?")) return;
+
+    // 1. Delete review from Supabase
+    const { error: reviewDeleteError } = await supabase
+      .from('reviews')
+      .delete()
+      .eq('id', reviewToDelete.id);
+
+    if (reviewDeleteError) {
+      toast({ title: "Error", description: reviewDeleteError.message || "Failed to delete review.", variant: "destructive" });
+      return;
     }
+
+    // 2. Update project in Supabase to remove review_id
+    const { error: projectUpdateError } = await supabase
+      .from('projects')
+      .update({ review_id: null })
+      .eq('id', projectId);
+
+    if (projectUpdateError) {
+      toast({ title: "Error", description: projectUpdateError.message || "Failed to update project after review deletion.", variant: "destructive" });
+      return;
+    }
+
+    // 3. Update local state/UI
+    onDeleteReview(projectId, reviewId);
+    toast({ title: t.reviewDeletedTitle || "Review Deleted", description: t.reviewDeletedDesc || "The review has been removed." });
   };
 
   const handleReviewEdit = (review) => {
@@ -341,13 +366,11 @@ const AdminReviewsTab = ({ projects, users, onUpdateProject, onDeleteReview }) =
                         )}
                       </Dialog>
 
-                      <Button variant="destructive" size="sm" onClick={() => handleReviewDelete(review.projectId)}>
+                      <Button variant="destructive" size="sm" onClick={() => handleReviewDelete(review.projectId, review.id)}>
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </TableCell>
-
                   </TableRow>
-
                 ))}
               </TableBody>
             </Table>

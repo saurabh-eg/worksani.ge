@@ -191,15 +191,6 @@ export const useProjectData = (
         awarded_supplier_id: updatedProjectData.awardedSupplierId,
         awarded_bid_id: updatedProjectData.awardedBidId,
         awarded_amount: updatedProjectData.awardedAmount,
-        userId: undefined,
-        awardedSupplierId: undefined,
-        awardedBidId: undefined,
-        awardedAmount: undefined,
-        customerId: undefined,
-        customerNumericId: undefined,
-        paymentStatus: undefined,
-        bids: undefined,
-        postedDate: undefined,
       };
 
       // Robustly set review_id: prefer review_id, then review.id, else omit
@@ -242,12 +233,18 @@ export const useProjectData = (
         return null;
       }
 
-      // Update local state with updated project data
-      setProjects(prevProjects =>
-        prevProjects.map(p => (p.id === projectId ? { ...p, ...data } : p))
-      );
-
-      return data;
+      // Fix: Supabase returns an array of updated rows
+      if (data && Array.isArray(data) && data.length > 0) {
+        const updatedProject = data[0];
+        setProjects(prevProjects =>
+          prevProjects.map(p => (p.id === projectId ? { ...p, ...updatedProject } : p))
+        );
+        toast({ title: "Project Updated", description: "Project has been updated successfully.", variant: "default" });
+        return updatedProject;
+      } else {
+        toast({ title: "Update Failed", description: "No project was updated.", variant: "destructive" });
+        return null;
+      }
     } catch (err) {
       toast({ title: "Error", description: err.message || "Unexpected error updating project.", variant: "destructive" });
     }
@@ -415,19 +412,22 @@ export const useProjectData = (
     }
   }, [currentUser, projects, toast, updateUserFuncForReview, usersData]);
 
-  const deleteReviewByProjectId = useCallback((projectId) => {
+  const deleteReviewByProjectId = useCallback((projectId, reviewId) => {
     setProjects(prevProjects => 
       prevProjects.map(p => {
         if (p.id === projectId) {
-          const supplierId = p.awardedSupplierId;
-          if (supplierId && updateUserFuncForReview && usersData) {
-            const supplierToUpdate = usersData.find(u => u.id === supplierId);
-            if (supplierToUpdate && supplierToUpdate.reviews) {
-              const updatedReviews = supplierToUpdate.reviews.filter(rev => rev.projectId !== projectId);
-              updateUserFuncForReview(supplierId, { reviews: updatedReviews });
+          // Remove review only if it matches the reviewId
+          if (p.review && (!reviewId || p.review.id === reviewId)) {
+            const supplierId = p.awardedSupplierId;
+            if (supplierId && updateUserFuncForReview && usersData) {
+              const supplierToUpdate = usersData.find(u => u.id === supplierId);
+              if (supplierToUpdate && supplierToUpdate.reviews) {
+                const updatedReviews = supplierToUpdate.reviews.filter(rev => rev.projectId !== projectId);
+                updateUserFuncForReview(supplierId, { reviews: updatedReviews });
+              }
             }
+            return { ...p, review: null };
           }
-          return { ...p, review: null };
         }
         return p;
       })

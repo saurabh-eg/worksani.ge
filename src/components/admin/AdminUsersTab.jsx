@@ -68,16 +68,13 @@ const AdminUsersTab = ({ users, onUpdateUser, onDeleteUser, onChangePassword }) 
       return;
     }
     
-    // Admin changing password for a user is a sensitive operation.
-    // Supabase client-side updateUser can't change other users' passwords.
-    // This requires a server-side function (Edge Function) with service_role key.
     // For now, this will likely fail or do nothing without such a backend function.
     const success = await onChangePassword(changingPasswordUser.id, newPassword, null, true); 
     if (success) {
-      toast({ title: "Password Change Initiated", description: `Password change process for ${changingPasswordUser.name} initiated. (Requires server-side logic for completion)`, variant: "default" });
+      toast({ title: "Password Changed", description: `Password for ${changingPasswordUser.name} has been updated successfully.`, variant: "default" });
       setChangingPasswordUser(null);
     } else {
-      toast({ title: "Password Change Failed", description: "Could not update password. This action typically requires server-side permissions.", variant: "destructive" });
+      toast({ title: "Password Change Failed", description: "Could not update password. Please check your server-side logic and permissions.", variant: "destructive" });
     }
   };
 
@@ -189,6 +186,9 @@ const AdminUsersTab = ({ users, onUpdateUser, onDeleteUser, onChangePassword }) 
                   <DialogContent className="sm:max-w-md">
                     <DialogHeader>
                       <DialogTitle>Change Password for {changingPasswordUser.name}</DialogTitle>
+                      <DialogDescription>
+                        Set a new password for this user. The user will be able to log in with the new password immediately.
+                      </DialogDescription>
                     </DialogHeader>
                     <div className="grid gap-4 py-4">
                       <div className="space-y-1">

@@ -22,8 +22,7 @@ const AdminProjectsTab = ({ projects, onUpdateProject, onDeleteProject, getUserB
 
   const handleProjectSave = () => {
     if (!editingProject) return;
-    onUpdateProject(editingProject);
-    setManagedProjects(prev => prev.map(p => p.id === editingProject.id ? editingProject : p));
+    onUpdateProject(editingProject.id, editingProject); // Fix: pass id and data
     toast({ title: "Project Updated", description: `Project "${editingProject.title}" has been updated.`, variant: "default" });
     setEditingProject(null);
   };

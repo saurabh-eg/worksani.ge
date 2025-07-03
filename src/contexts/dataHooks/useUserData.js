@@ -63,12 +63,10 @@ export const useUserData = () => {
         transaction_history: [...currentTransactionHistory, newTransaction]
       };
 
-      const { data: updatedUser, error } = await supabase
+      const { error } = await supabase
         .from('profiles')
         .update(updateData)
-        .eq('id', userId)
-        .select('*')
-        .single();
+        .eq('id', userId);
 
       if (error) {
         console.error('Update error:', error);
@@ -76,29 +74,27 @@ export const useUserData = () => {
         return false;
       }
 
-      if (updatedUser) {
-        // Update local state
-        setUsersData(prev => prev.map(u => u.id === userId ? {
-          ...u,
+      // Always update local state instantly after successful update
+      setUsersData(prev => prev.map(u => u.id === userId ? {
+        ...u,
+        [balanceField]: newBalance,
+        transaction_history: [...currentTransactionHistory, newTransaction]
+      } : u));
+
+      // Update user context if it's the current user
+      if (currentUser && currentUser.id === userId) {
+        updateUserContextProfile({
+          ...currentUser,
           [balanceField]: newBalance,
           transaction_history: [...currentTransactionHistory, newTransaction]
-        } : u));
-
-        // Update user context if it's the current user
-        if (currentUser && currentUser.id === userId) {
-          updateUserContextProfile({
-            ...currentUser,
-            [balanceField]: newBalance,
-            transaction_history: [...currentTransactionHistory, newTransaction]
-          });
-        }
-
-        toast({ 
-          title: "Balance Updated", 
-          description: `Successfully added ₾${numericAmount.toFixed(2)} to ${userToUpdate.role === 'supplier' ? 'bid' : 'wallet'} balance.` 
         });
-        return true;
       }
+
+      toast({ 
+        title: "Balance Updated", 
+        description: `Successfully added ₾${numericAmount.toFixed(2)} to ${userToUpdate.role === 'supplier' ? 'bid' : 'wallet'} balance.` 
+      });
+      return true;
     } catch (error) {
       console.error('TopUp error:', error);
       toast({ title: "Update Failed", description: error.message, variant: "destructive" });
@@ -191,6 +187,9 @@ export const useUserData = () => {
 
   const updateUser = useCallback(async (userId, updatedUserDataPartial) => {
     const dataToUpdate = { ...updatedUserDataPartial };
+
+    // Remove fields that do not exist in the DB schema
+    delete dataToUpdate.memberSince;
 
     // Ensure JSONB fields are correctly formatted as arrays
     ['transaction_history', 'past_projects_gallery', 'supplier_reviews'].forEach(field => {
@@ -292,7 +291,8 @@ export const useUserData = () => {
   }, [toast]);
 
   const changePassword = useCallback(async (userId, newPassword, currentPasswordInput, isAdminChange = false) => {
-    if (!isAdminChange) { // User changing their own password
+    // If the current user is changing their own password
+    if (currentUser && currentUser.id === userId && !isAdminChange) {
       const { error } = await supabase.auth.updateUser({ password: newPassword });
       if (error) {
         toast({ title: "Password Change Failed", description: error.message, variant: "destructive" });
@@ -300,7 +300,9 @@ export const useUserData = () => {
       }
       toast({ title: "Password Changed", description: "Your password has been updated successfully.", variant: "default" });
       return true;
-    } else { // Admin attempting to change another user's password
+    }
+    // If an admin is changing another user's password
+    if (currentUser && currentUser.role === 'admin' && (isAdminChange || currentUser.id !== userId)) {
       try {
         const { data: { session } } = await supabase.auth.getSession();
         const jwt = session?.access_token;
@@ -324,7 +326,10 @@ export const useUserData = () => {
         return false;
       }
     }
-  }, [toast]);
+    // If not allowed
+    toast({ title: "Permission Denied", description: "You are not authorized to change this password.", variant: "destructive" });
+    return false;
+  }, [toast, currentUser]);
 
   const getUserById = useCallback((userId) => usersData.find(u => u.id === userId), [usersData]);
   const getUserByEmail = useCallback((email) => usersData.find(u => u.email === email), [usersData]);
