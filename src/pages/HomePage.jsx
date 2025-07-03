@@ -9,13 +9,17 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { motion } from 'framer-motion';
 import { CheckCircle, Users, Wrench, MessageSquare, Search, Edit, DollarSign, Star, UserCircle, Mail, Phone, Send } from 'lucide-react';
+
 import { useData } from '@/contexts/DataContext';
 import { useToast } from '@/components/ui/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 
 const HomePage = () => {
   const navigate = useNavigate();
+
   const { users } = useData();
   const { toast } = useToast();
+  const { user, isSupplier, isCustomer, isAuthenticated } = useAuth();
 
   const [contactForm, setContactForm] = React.useState({ name: '', email: '', subject: '', message: '' });
   const [isSubmittingContact, setIsSubmittingContact] = React.useState(false);
@@ -100,16 +104,36 @@ const HomePage = () => {
             >
               <Button
                 size="lg"
-                className="bg-white text-purple-700 hover:bg-gray-100 font-bold text-lg px-10 py-6 w-full sm:w-auto transform hover:scale-105 transition-transform duration-300"
-                onClick={() => navigate('/register?role=customer')}
+                className={`bg-white text-purple-700 hover:bg-gray-100 font-bold text-lg px-10 py-6 w-full sm:w-auto transform hover:scale-105 transition-transform duration-300 ${isSupplier ? 'opacity-60 cursor-not-allowed' : ''}`}
+                onClick={() => {
+                  if (isSupplier) {
+                    toast({ title: "Sorry😔 You are a Service Provider", description: "Suppliers cannot request services from this Account." });
+                  } else if (isCustomer && isAuthenticated) {
+                    navigate('/dashboard');
+                  } else {
+                    navigate('/register?role=customer');
+                  }
+                }}
+                // Don't disable, just show toast if supplier
+                // disabled={isSupplier}
               >
                 I Need a Service
               </Button>
               <Button
                 size="lg"
                 variant="outline"
-                className="border-white text-purple-700 hover:bg-white hover:text-purple-700 font-bold text-lg px-10 py-6 w-full sm:w-auto transform hover:scale-105 transition-transform duration-300"
-                onClick={() => navigate('/register?role=supplier')}
+                className={`border-white text-purple-700 hover:bg-white hover:text-purple-700 font-bold text-lg px-10 py-6 w-full sm:w-auto transform hover:scale-105 transition-transform duration-300 ${isCustomer ? 'opacity-60 cursor-not-allowed' : ''}`}
+                onClick={() => {
+                  if (isCustomer) {
+                    toast({ title: "Sorry😔 You are a Customer", description: "Customers cannot become service providers from this account." });
+                  } else if (isSupplier && isAuthenticated) {
+                    navigate('/projects');
+                  } else {
+                    navigate('/register?role=supplier');
+                  }
+                }}
+                // Don't disable, just show toast if customer
+                // disabled={isCustomer}
               >
                 I'm a Service Provider
               </Button>

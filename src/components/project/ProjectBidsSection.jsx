@@ -118,7 +118,7 @@ const ProjectBidsSection = ({ project, user, users, onBidSubmit, onAcceptBid }) 
                         <div className="flex items-center justify-between">
                           <div className="flex items-center">
                             <Avatar className="h-10 w-10 mr-3 border-2 border-purple-300 dark:border-purple-500">
-                              <AvatarImage src={bid.supplierProfilePhoto || supplier?.profilePhoto || `https://avatar.vercel.sh/${supplier?.email}.png?size=40`} alt={bid.supplierName} />
+                              <AvatarImage src={bid.supplierProfilePhoto || supplier?.profile_photo_url || `https://avatar.vercel.sh/${supplier?.email}.png?size=40`} alt={bid.supplierName} />
                               <AvatarFallback className="bg-purple-200 text-purple-700 dark:bg-purple-700 dark:text-purple-200">
                                 {bid.supplierName ? bid.supplierName.substring(0, 2).toUpperCase() : <UserCircle />}
                               </AvatarFallback>
@@ -191,7 +191,7 @@ const ProjectBidsSection = ({ project, user, users, onBidSubmit, onAcceptBid }) 
                         <div className="flex items-center justify-between">
                           <div className="flex items-center">
                             <Avatar className="h-10 w-10 mr-3 border-2 border-purple-300 dark:border-purple-500">
-                              <AvatarImage src={bid.supplierProfilePhoto || supplier?.profilePhoto || `https://avatar.vercel.sh/${supplier?.email}.png?size=40`} alt={bid.supplierName} />
+                              <AvatarImage src={bid.supplierProfilePhoto || supplier?.profile_photo_url || `https://avatar.vercel.sh/${supplier?.email}.png?size=40`} alt={bid.supplierName} />
                               <AvatarFallback className="bg-purple-200 text-purple-700 dark:bg-purple-700 dark:text-purple-200">
                                 {bid.supplierName ? bid.supplierName.substring(0, 2).toUpperCase() : <UserCircle />}
                               </AvatarFallback>

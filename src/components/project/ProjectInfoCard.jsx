@@ -52,7 +52,7 @@ const ProjectInfoCard = ({ project, customer }) => {
               {customer && (
                 <div className="flex items-center text-gray-600 col-span-1 sm:col-span-2">
                   <Avatar className="h-8 w-8 mr-2 border-2 border-purple-300">
-                    <AvatarImage src={customer.profilePhoto || `https://avatar.vercel.sh/${customer.email}.png?size=32`} alt={customer.name} />
+                    <AvatarImage src={customer.profile_photo_url || `https://avatar.vercel.sh/${customer.email}.png?size=32`} alt={customer.name} />
                     <AvatarFallback className="bg-purple-200 text-purple-700 text-xs">
                       {customer.name ? customer.name.substring(0, 2).toUpperCase() : <UserCircle size={16} />}
                     </AvatarFallback>
