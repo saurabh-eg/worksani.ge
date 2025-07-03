@@ -19,7 +19,7 @@ const ProjectInfoCard = ({ project, customer }) => {
       <div className="md:flex">
         <div className="md:w-1/2">
           {project.photos && project.photos.length > 0 && project.photos[0].url ? (
-            <img src={project.photos[0].url} alt={project.title} className="object-cover w-full h-64 md:h-full" />
+            <img src={project.photos[0].url} alt={project.title} className="object-contain w-full h-64 md:h-full" />
           ) : (
             <div className="w-full h-64 md:h-full bg-gradient-to-br from-purple-200 to-green-200 flex items-center justify-center">
               <ImageIcon size={64} className="text-purple-500 opacity-70" />

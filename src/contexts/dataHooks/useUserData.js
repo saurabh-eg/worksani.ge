@@ -26,6 +26,9 @@ export const useUserData = () => {
 
   useEffect(() => {
     fetchUsers();
+    // Polling for real-time updates
+    const interval = setInterval(fetchUsers, 5000); // 5 seconds
+    return () => clearInterval(interval);
   }, [fetchUsers]);
 
   // Update the topUpUserBalance function

@@ -24,7 +24,8 @@ export const useProjectData = (
 
   // Fetch projects from Supabase on mount
   useEffect(() => {
-  const fetchProjects = async () => {
+    let isMounted = true;
+    const fetchProjects = async () => {
       try {
         const { data, error } = await supabase
           .from('projects')
@@ -66,53 +67,58 @@ export const useProjectData = (
           return;
         }
 
-          if (data) {
-            // Map created_at to postedDate for frontend consistency
-            const mappedData = data.map(project => ({
-              ...project,
-              postedDate: project.created_at,
-              customerId: project.customer_id,  // map customer_id to customerId for UI compatibility
-              customerNumericId: project.customer_numeric_id,
-              awardedSupplierId: project.awarded_supplier_id,
-              awardedBidId: project.awarded_bid_id,
-              awardedAmount: project.awarded_amount,
-              // Map bids fields to camelCase and supplierId
-              bids: (project.bids || []).map(bid => ({
-                id: bid.id,
-                projectId: bid.project_id,
-                supplierId: bid.bidder_id, // <--- use bidder_id as supplierId
-                amount: bid.amount,
-                date: bid.created_at,
-                supplierName: bid.supplier_name,
-                supplierProfilePhoto: bid.supplier_profile_photo_url,
-                message: bid.message,
-                supplierNumericId: bid.supplier_numeric_id,
-              })),
-              // Map review fields to camelCase and ratings object
-              review: project.review ? {
-                id: project.review.id,
-                projectId: project.review.project_id,
-                reviewerId: project.review.reviewer_id,
-                supplierId: project.review.supplier_id,
-                ratings: {
-                  overall: project.review.rating_overall,
-                  professionalism: project.review.rating_professionalism,
-                  quality: project.review.rating_quality,
-                  cleanliness: project.review.rating_cleanliness,
-                  timeliness: project.review.rating_timeliness,
-                },
-                comment: project.review.comment,
-                status: project.review.status,
-                date: project.review.created_at,
-                reviewerName: project.review.reviewer_name,
-                reviewerNumericId: project.review.reviewer_numeric_id,
-              } : null,
-              // Ensure photos is always an array
-              photos: Array.isArray(project.photos) ? project.photos : (project.photos ? JSON.parse(project.photos) : []),
-            }));
-            setProjects(mappedData);
-            localStorage.setItem('projects_worksani', JSON.stringify(mappedData));
-          }
+        if (data && isMounted) {
+          // Map created_at to postedDate for frontend consistency
+          const mappedData = data.map(project => ({
+            ...project,
+            postedDate: project.created_at,
+            customerId: project.customer_id,  // map customer_id to customerId for UI compatibility
+            customerNumericId: project.customer_numeric_id,
+            awardedSupplierId: project.awarded_supplier_id,
+            awardedBidId: project.awarded_bid_id,
+            awardedAmount: project.awarded_amount,
+            // Map bids fields to camelCase and supplierId
+            bids: (project.bids || []).map(bid => ({
+              id: bid.id,
+              projectId: bid.project_id,
+              supplierId: bid.bidder_id, // <--- use bidder_id as supplierId
+              amount: bid.amount,
+              date: bid.created_at,
+              supplierName: bid.supplier_name,
+              supplierProfilePhoto: bid.supplier_profile_photo_url,
+              message: bid.message,
+              supplierNumericId: bid.supplier_numeric_id,
+            })),
+            // Map review fields to camelCase and ratings object
+            review: project.review ? {
+              id: project.review.id,
+              projectId: project.review.project_id,
+              reviewerId: project.review.reviewer_id,
+              supplierId: project.review.supplier_id,
+              ratings: {
+                overall: project.review.rating_overall,
+                professionalism: project.review.rating_professionalism,
+                quality: project.review.rating_quality,
+                cleanliness: project.review.rating_cleanliness,
+                timeliness: project.review.rating_timeliness,
+              },
+              comment: project.review.comment,
+              status: project.review.status,
+              date: project.review.created_at,
+              reviewerName: project.review.reviewer_name,
+              reviewerNumericId: project.review.reviewer_numeric_id,
+            } : null,
+            // Ensure photos is always an array
+            photos: Array.isArray(project.photos) ? project.photos : (project.photos ? JSON.parse(project.photos) : []),
+          }));
+          setProjects(prev => {
+            if (JSON.stringify(prev) !== JSON.stringify(mappedData)) {
+              localStorage.setItem('projects_worksani', JSON.stringify(mappedData));
+              return mappedData;
+            }
+            return prev;
+          });
+        }
       } catch (err) {
         console.error('Unexpected error fetching projects:', err);
         toast({ title: "Error", description: err.message || "Unexpected error fetching projects.", variant: "destructive" });
@@ -120,6 +126,11 @@ export const useProjectData = (
     };
 
     fetchProjects();
+    const interval = setInterval(fetchProjects, 5000); // 5 seconds
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
   }, []);
 
   const { user: currentUser, language } = useAuth();
