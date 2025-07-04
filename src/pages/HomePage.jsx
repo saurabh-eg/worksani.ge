@@ -352,7 +352,15 @@ const HomePage = () => {
               <Button
                 size="lg"
                 className="bg-green-400 text-purple-700 hover:bg-green-500 font-bold text-lg px-10 py-6 w-full sm:w-auto transform hover:scale-105 transition-transform duration-300"
-                onClick={() => navigate('/register?role=customer')}
+                onClick={() => {
+                  if (isCustomer && isAuthenticated) {
+                    navigate('/suppliers'); // redirect to suppliers directory
+                  } else if (isSupplier && isAuthenticated) {
+                    toast({ title: "You are a Service Provider", description: "You cannot request services from this account." });
+                  } else {
+                    navigate('/register?role=customer');
+                  }
+                }}
               >
                 Find a Service Provider
               </Button>
@@ -360,7 +368,15 @@ const HomePage = () => {
                 size="lg"
                 variant="outline"
                 className="border-white text-purple-700 hover:bg-white hover:text-purple-700 font-bold text-lg px-10 py-6 w-full sm:w-auto transform hover:scale-105 transition-transform duration-300"
-                onClick={() => navigate('/register?role=supplier')}
+                onClick={() => {
+                  if (isSupplier && isAuthenticated) {
+                    navigate('/projects'); // supplier dashboard/projects
+                  } else if (isCustomer && isAuthenticated) {
+                    toast({ title: "You are a Customer", description: "Customers cannot become suppliers from this account." });
+                  } else {
+                    navigate('/register?role=supplier');
+                  }
+                }}
               >
                 Become a Supplier
               </Button>
