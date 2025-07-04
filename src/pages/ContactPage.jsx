@@ -20,7 +20,7 @@ const ContactPage = () => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-gradient-to-br from-purple-50 via-slate-50 to-green-50">
+    <div className="flex flex-col min-h-screen bg-gradient-to-br from-purple-700 to-green-500">
       <Header />
       <main className="flex-grow">
         <motion.section

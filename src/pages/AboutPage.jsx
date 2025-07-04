@@ -17,7 +17,7 @@ const AboutPage = () => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-gradient-to-br from-slate-50 to-purple-50">
+    <div className="flex flex-col min-h-screen bg-gradient-to-br from-purple-700 to-green-500">
       <Header />
       <main className="flex-grow">
         <motion.section 
