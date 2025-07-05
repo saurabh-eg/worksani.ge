@@ -17,7 +17,7 @@ import { useAuth } from '@/contexts/AuthContext';
 const HomePage = () => {
   const navigate = useNavigate();
 
-  const { users } = useData();
+  const { users, projects } = useData();
   const { toast } = useToast();
   const { user, isSupplier, isCustomer, isAuthenticated } = useAuth();
 
@@ -51,7 +51,26 @@ const HomePage = () => {
 
 
   const featuredSuppliers = users.filter(u => u.role === 'supplier').slice(0, 3);
-  const testimonials = users.flatMap(u => u.reviews || []).filter(r => r.rating >= 4).slice(0, 3);
+
+  // For each featured supplier, calculate reviews and average rating from projects
+  const getSupplierReviews = (supplierId) => {
+    return projects
+      .filter(
+        (p) =>
+          p.awardedSupplierId === supplierId &&
+          p.review &&
+          (p.review.supplierId === supplierId || p.review.supplier_id === supplierId) &&
+          (p.review.status === 'approved' || p.review.status === 'Approved')
+      )
+      .map((p) => p.review);
+  };
+
+  const getAverageRating = (reviews) => {
+    if (!reviews.length) return 0;
+    return (
+      reviews.reduce((acc, review) => acc + (review.rating_overall ?? review.ratings?.overall ?? 0), 0) / reviews.length
+    );
+  };
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -73,6 +92,18 @@ const HomePage = () => {
       transition: { duration: 0.3 }
     }
   };
+
+  // Example: Get top 3 testimonials from projects with reviews
+  // const testimonials = projects
+  //   .filter(p => p.review && p.review.comment)
+  //   .map(p => ({
+  //     id: p.id,
+  //     reviewerName: p.review.reviewerName || "Anonymous",
+  //     rating: p.review.rating_overall || p.review.ratings?.overall || 0,
+  //     comment: p.review.comment,
+  //     projectTitle: p.title || "General Feedback"
+  //   }))
+  //   .slice(0, 3);
 
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-br from-slate-50 to-purple-50">
@@ -201,35 +232,42 @@ const HomePage = () => {
                 className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8"
                 initial="hidden" whileInView="visible" viewport={{ once: true }} variants={containerVariants}
               >
-                {featuredSuppliers.map((supplier) => (
-                  <motion.div key={supplier.id} variants={itemVariants} whileHover="hover" {...cardHoverEffect}>
-                    <Card className="overflow-hidden card-hover h-full flex flex-col">
-                      <CardHeader className="bg-gradient-to-r from-purple-600 to-green-500 p-0">
-                        <div className="h-40 w-full flex items-center justify-center">
-                          {supplier.profilePhoto ?
-                            <img-replace src={supplier.profilePhoto} alt={supplier.companyName || supplier.name} className="w-24 h-24 rounded-full border-4 border-white object-cover shadow-lg" /> :
-                            <UserCircle size={80} className="text-white opacity-80" />
-                          }
-                        </div>
-                      </CardHeader>
-                      <CardContent className="p-6 flex-grow flex flex-col">
-                        <CardTitle className="text-xl font-semibold text-purple-700 mb-1">{supplier.companyName || supplier.name}</CardTitle>
-                        <CardDescription className="text-gray-600 text-sm mb-3 flex-grow">{supplier.bio?.substring(0, 100) || "Experienced professional."}{supplier.bio && supplier.bio.length > 100 ? '...' : ''}</CardDescription>
-                        <div className="flex items-center text-yellow-500 mb-3">
-                          {[...Array(5)].map((_, i) => <Star key={i} size={18} fill="currentColor" className={i < (supplier.averageRating || 4) ? 'text-yellow-500' : 'text-gray-300'} />)}
-                          <span className="ml-2 text-sm text-gray-500">({(supplier.reviews?.length || 0) + 3} reviews)</span>
-                        </div>
-                        <Button onClick={() => navigate(`/suppliers/${supplier.id}`)} className="w-full mt-auto bg-green-500 hover:bg-green-600 text-white">View Profile</Button>
-                      </CardContent>
-                    </Card>
-                  </motion.div>
-                ))}
+                {featuredSuppliers.map((supplier) => {
+                  const supplierReviews = getSupplierReviews(supplier.id);
+                  const averageRating = getAverageRating(supplierReviews);
+                  return (
+                    <motion.div key={supplier.id} variants={itemVariants} whileHover="hover" {...cardHoverEffect}>
+                      <Card className="overflow-hidden card-hover h-full flex flex-col">
+                        <CardHeader className="bg-gradient-to-r from-purple-600 to-green-500 p-0">
+                          <div className="h-40 w-full flex items-center justify-center">
+                            {supplier.profile_photo_url ? (
+                              <img src={supplier.profile_photo_url} alt={supplier.companyName || supplier.name} className="w-24 h-24 rounded-full border-4 border-white object-cover shadow-lg" />
+                            ) : (
+                              <UserCircle size={80} className="text-white opacity-80" />
+                            )}
+                          </div>
+                        </CardHeader>
+                        <CardContent className="p-6 flex-grow flex flex-col">
+                          <CardTitle className="text-xl font-semibold text-purple-700 mb-1">{supplier.companyName || supplier.name}</CardTitle>
+                          <CardDescription className="text-gray-600 text-sm mb-3 flex-grow">{supplier.bio?.substring(0, 100) || "Experienced professional."}{supplier.bio && supplier.bio.length > 100 ? '...' : ''}</CardDescription>
+                          <div className="flex items-center text-yellow-500 mb-3">
+                            {[...Array(5)].map((_, i) => (
+                              <Star key={i} size={18} fill="currentColor" className={i < Math.round(averageRating) ? 'text-yellow-500' : 'text-gray-300'} />
+                            ))}
+                            <span className="ml-2 text-sm text-gray-500">({supplierReviews.length} reviews)</span>
+                          </div>
+                          <Button onClick={() => navigate(`/suppliers/${supplier.id}`)} className="w-full mt-auto bg-green-500 hover:bg-green-600 text-white">View Profile</Button>
+                        </CardContent>
+                      </Card>
+                    </motion.div>
+                  );
+                })}
               </motion.div>
             </div>
           </section>
         )}
 
-        {testimonials.length > 0 && (
+        {/* {testimonials.length > 0 && (
           <section className="py-16 md:py-24 bg-white">
             <div className="container mx-auto px-4 sm:px-6 lg:px-8">
               <motion.h2
@@ -264,7 +302,7 @@ const HomePage = () => {
               </motion.div>
             </div>
           </section>
-        )}
+        )} */}
 
         <section id="about-us" className="py-16 md:py-24 bg-purple-50">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8">
