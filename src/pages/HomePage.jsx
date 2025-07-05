@@ -28,18 +28,25 @@ const HomePage = () => {
     setContactForm({ ...contactForm, [e.target.name]: e.target.value });
   };
 
-  const handleContactSubmit = (e) => {
+  const handleContactSubmit = async (e) => {
     e.preventDefault();
     setIsSubmittingContact(true);
-    // Simulate API call
-    setTimeout(() => {
-      toast({
-        title: "Message Sent!",
-        description: "Thank you for contacting us. We'll get back to you within 24 hours.",
+    try {
+      const response = await fetch('https://rvqfqneuvwggcnsmpcpw.supabase.co/functions/v1/contact-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(contactForm),
       });
-      setContactForm({ name: '', email: '', subject: '', message: '' });
-      setIsSubmittingContact(false);
-    }, 1000);
+      if (response.ok) {
+        toast({ title: 'Message Sent!', description: "Thank you for contacting us. We'll get back to you shortly." });
+        setContactForm({ name: '', email: '', subject: '', message: '' });
+      } else {
+        toast({ title: 'Error', description: 'Failed to send message. Please try again later.' });
+      }
+    } catch {
+      toast({ title: 'Error', description: 'Failed to send message. Please try again later.' });
+    }
+    setIsSubmittingContact(false);
   };
 
 
