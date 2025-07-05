@@ -143,7 +143,7 @@ export const DataProvider = ({ children }) => {
       markNotificationAsRead,
       clearReadNotificationsForUser,
     }}>
-      {!loadingData ? children : <div>Loading application data...</div>}
+      {!loadingData ? children : <div></div>}
     </DataContext.Provider>
   );
 };
